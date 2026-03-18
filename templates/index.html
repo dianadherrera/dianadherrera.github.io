@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block body_class %}home{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>{{ config.title }}</h1>
+  <p class="tagline">{{ config.extra.tagline }}</p>
+  <nav class="home-nav">
+    <a href="/poems/" class="home-link">Poesía</a>
+    {% if config.extra.newsletter %}<a href="{{ config.extra.newsletter }}" class="home-link">Boletín</a>{% endif %}
+    {% if config.extra.donate %}<a href="{{ config.extra.donate }}" class="home-link">Apoyar</a>{% endif %}
+    <a href="/about/" class="home-link">Biografía</a>
+  </nav>
+</section>
+{% endblock %}

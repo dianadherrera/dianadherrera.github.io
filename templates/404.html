@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ config.title }} | Página no encontrada{% endblock %}
+{% block body_class %}not-found{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Página no encontrada</h1>
+  <p class="tagline">La página que buscas no existe</p>
+  <nav class="home-nav">
+    <a href="/" class="home-link">Inicio</a>
+    <a href="/poems/" class="home-link">Poesía</a>
+  </nav>
+</section>
+{% endblock %}

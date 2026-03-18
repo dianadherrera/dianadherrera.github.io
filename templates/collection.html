@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block lang %}{{ section.extra.lang | default(value=config.default_language) }}{% endblock %}
+{% block title %}{{ config.title }} | {{ section.title }}{% endblock %}
+{% block og_title %}{{ section.title }}{% endblock %}
+{% block og_image %}
+  {%- if section.extra.cover -%}
+    {%- set slug = section.components | last -%}
+    {%- set img_path = "poems/" ~ slug ~ "/" ~ section.extra.cover -%}
+    {%- set og = resize_image(path=img_path, width=1200, op="fit_width") -%}
+    <meta property="og:image" content="{{ og.url }}">
+  {%- endif -%}
+{% endblock %}
+{% block body_class %}collection{% endblock %}
+{% block breadcrumb %}
+  <span class="sep">/</span><a href="/poems/">Poesía</a>
+  <span class="sep">/</span><a href="{{ section.path }}">{{ section.title }}</a>
+{% endblock %}
+
+{% block content %}
+<article class="collection-detail">
+  {% if section.extra.cover %}
+    {% set slug = section.components | last %}
+    {% set cover_path = "poems/" ~ slug ~ "/" ~ section.extra.cover %}
+    {% set cover = resize_image(path=cover_path, width=440, op="fit_width", format="webp", quality=80) %}
+    <img
+      src="{{ cover.url }}"
+      alt="{{ section.title }}"
+      width="{{ cover.width }}"
+      height="{{ cover.height }}"
+      class="collection-cover-large"
+      loading="lazy"
+      decoding="async"
+    >
+  {% endif %}
+  <h1>{{ section.title }}</h1>
+  <p class="collection-author">{{ config.title }}</p>
+  <nav class="collection-actions" aria-label="Downloads">
+    <a href="/pdf/{{ section.components | last }}.pdf" class="action-link">PDF</a>
+    <a href="/epub/{{ section.components | last }}.epub" class="action-link">EPUB</a>
+    {% if config.extra.donate %}<a href="{{ config.extra.donate }}" class="action-link">Donaciones</a>{% endif %}
+  </nav>
+  <nav class="table-of-contents">
+    <ol>
+      {% if section.subsections | length > 0 %}
+        {# Collection with picture-sections: show sections with their poems indented #}
+        {% for sub_path in section.subsections %}
+          {% set sub = get_section(path=sub_path) %}
+          <li class="toc-section">
+            <a href="{{ sub.path }}">{{ sub.title }}</a>
+            {% if sub.pages | length > 0 %}
+              <ol class="toc-poems">
+                {% for poem in sub.pages %}
+                  <li class="toc-poem">
+                    <a href="{{ poem.path }}">
+                      <span>{{ poem.title }}</span>
+                      {% if poem.date %}<time datetime="{{ poem.date }}">{{ poem.date }}</time>{% endif %}
+                    </a>
+                  </li>
+                {% endfor %}
+              </ol>
+            {% endif %}
+          </li>
+        {% endfor %}
+      {% else %}
+        {# Flat collection: just list poems #}
+        {% for page in section.pages %}
+          {% if page.extra.entry_type == "picture" %}
+            <li class="toc-picture">
+              <a href="{{ page.path }}">{{ page.title }}</a>
+            </li>
+          {% else %}
+            <li class="toc-poem">
+              <a href="{{ page.path }}">
+                <span>{{ page.title }}</span>
+                {% if page.date %}<time datetime="{{ page.date }}">{{ page.date }}</time>{% endif %}
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </ol>
+  </nav>
+</article>
+{% endblock %}

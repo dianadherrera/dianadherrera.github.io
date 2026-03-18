@@ -1,0 +1,67 @@
+{#
+  Poem renderer — turns raw markdown into stanza-aware HTML.
+
+  Zola lacks a hard_breaks option, so standard markdown joins lines
+  within a paragraph. Poetry needs each line preserved. This macro
+  reads the raw file, splits on blank lines (stanzas), and renders
+  each stanza as a <p> with <br> line breaks.
+
+  Usage:
+    {% import "macros/poem.html" as poem %}
+    {{ poem::render(path=page.relative_path, base_path=col.path) }}
+#}
+
+{% macro render(path, base_path) %}
+  {%- set raw = load_data(path=path, format="plain") -%}
+  {%- set body = raw | regex_replace(pattern="^---[\s\S]*?---\n*", rep="") | trim -%}
+  {%- set stanzas = body | split(pat="
+
+") -%}
+  {%- for stanza in stanzas -%}
+    {%- set s = stanza | trim -%}
+    {%- if s is starting_with("![") -%}
+      {{ self::image(text=s, base_path=base_path) }}
+    {%- elif s != "" -%}
+      {{ self::stanza(text=s) }}
+    {%- endif -%}
+  {%- endfor -%}
+{% endmacro %}
+
+{% macro stanza(text) %}
+  {%- set html = text
+    | regex_replace(pattern="\*\*([^*]+)\*\*", rep="<strong>$1</strong>")
+    | regex_replace(pattern="\*([^*]+)\*", rep="<em>$1</em>")
+    | regex_replace(pattern="\b_([^_]+)_\b", rep="<em>$1</em>")
+    | regex_replace(pattern="\[([^\]]+)\]\(([^)]+)\)", rep="<a href='$2'>$1</a>")
+    | regex_replace(pattern=" *\n *", rep="<br>")
+  -%}
+  <p>{{ html | safe }}</p>
+{%- endmacro %}
+
+{% macro image(text, base_path) %}
+  {%- set parts = text | split(pat="](") -%}
+  {%- set alt = parts | first | trim_start_matches(pat="![") -%}
+  {%- set raw_src = parts | last | trim_end_matches(pat=")") | trim -%}
+  {%- if raw_src is starting_with("/") -%}
+    {%- set content_path = raw_src | trim_start_matches(pat="/") -%}
+  {%- else -%}
+    {%- set base = base_path | trim_start_matches(pat="/") -%}
+    {%- set content_path = base ~ raw_src -%}
+  {%- endif -%}
+  {%- set full = resize_image(path=content_path, width=1200, op="fit_width", format="webp", quality=85) -%}
+  {%- set sized = resize_image(path=content_path, width=600, op="fit_width", format="webp", quality=80) -%}
+  <figure>
+    <a href="{{ full.url }}" target="_blank" class="poem-image">
+      <img
+        src="{{ sized.url }}"
+        srcset="{{ sized.url }} 600w, {{ full.url }} 1200w"
+        sizes="(max-width: 600px) 100vw, 600px"
+        alt="{{ alt }}"
+        width="{{ sized.width }}"
+        height="{{ sized.height }}"
+        loading="lazy"
+        decoding="async"
+      >
+    </a>
+  </figure>
+{%- endmacro %}

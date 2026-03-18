@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}{{ config.title }} | Biografía{% endblock %}
+{% block body_class %}about{% endblock %}
+{% block breadcrumb %}<span class="sep">/</span><a href="/about/">Biografía</a>{% endblock %}
+
+{% block content %}
+<article class="about-content">
+  <h1>{{ config.title }}</h1>
+  <p>{{ config.extra.tagline }}</p>
+
+  <section class="about-now">
+    <h2>Ahora</h2>
+    <p>Escribiendo poesía, un respiro a la vez.</p>
+  </section>
+
+  <nav class="about-links" aria-label="Links">
+    {% if config.extra.instagram %}<a href="{{ config.extra.instagram }}">Instagram</a>{% endif %}
+    {% if config.extra.newsletter %}<a href="{{ config.extra.newsletter }}">Boletín</a>{% endif %}
+    {% if config.extra.donate %}<a href="{{ config.extra.donate }}">Apoyar</a>{% endif %}
+  </nav>
+</article>
+{% endblock %}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>{{ config.title }}</title>
+  <subtitle>{{ config.extra.tagline | default(value="") }}</subtitle>
+  <link href="{{ config.base_url }}/feed.xml" rel="self"/>
+  <link href="{{ config.base_url }}/"/>
+  <id>{{ config.base_url }}/</id>
+  {% if last_updated %}<updated>{{ last_updated }}</updated>{% endif %}
+  <author><name>{{ config.title }}</name></author>
+  {% for page in pages %}
+  <entry>
+    <title>{{ page.title }}</title>
+    <link href="{{ config.base_url }}{{ page.path }}"/>
+    <id>{{ config.base_url }}{{ page.path }}</id>
+    {% if page.date %}<updated>{{ page.date }}T00:00:00Z</updated>{% endif %}
+    <content type="html"><![CDATA[{{ page.content | safe }}]]></content>
+  </entry>
+  {% endfor %}
+</feed>
