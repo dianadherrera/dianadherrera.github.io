@@ -17,15 +17,29 @@
   {%- set stanzas = body | split(pat="
 
 ") -%}
+  {%- set_global in_body = false -%}
   {%- for stanza in stanzas -%}
     {%- set s = stanza | trim -%}
     {%- if s is starting_with("![") -%}
+      {%- if in_body -%}</div>{%- set_global in_body = false -%}{%- endif -%}
       {{ self::image(text=s, base_path=base_path) }}
     {%- elif s != "" -%}
+      {%- if not in_body -%}<div class="poem-body">{%- set_global in_body = true -%}{%- endif -%}
       {{ self::stanza(text=s) }}
     {%- endif -%}
   {%- endfor -%}
+  {%- if in_body -%}</div>{%- endif -%}
 {% endmacro %}
+
+{% macro plaintext(path) %}
+  {%- set raw = load_data(path=path, format="plain") -%}
+  {%- set body = raw | regex_replace(pattern="^---[\s\S]*?---\n*", rep="") | trim -%}
+  {%- set body = body | regex_replace(pattern="!\[[^\]]*\]\([^)]+\)\n*", rep="") -%}
+  {%- set body = body | regex_replace(pattern="\*\*([^*]+)\*\*", rep="$1") -%}
+  {%- set body = body | regex_replace(pattern="\*([^*]+)\*", rep="$1") -%}
+  {%- set body = body | regex_replace(pattern="\[([^\]]+)\]\([^)]+\)", rep="$1") -%}
+  {{- body | trim -}}
+{%- endmacro %}
 
 {% macro stanza(text) %}
   {%- set html = text

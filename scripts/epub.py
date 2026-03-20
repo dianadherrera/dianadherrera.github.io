@@ -7,6 +7,7 @@
 import hashlib
 import re
 import zipfile
+from datetime import datetime, timezone
 from html import escape as esc
 from pathlib import Path
 
@@ -212,7 +213,7 @@ def build_epub(col):
     <dc:creator>{esc(author)}</dc:creator>
     <dc:language>{lang}</dc:language>
     <dc:identifier id="uid">urn:uuid:{uuid}</dc:identifier>
-    <meta property="dcterms:modified">2025-01-01T00:00:00Z</meta>
+    <meta property="dcterms:modified">{datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}</meta>
 {cover_meta}
   </metadata>
   <manifest>

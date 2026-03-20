@@ -1,3 +1,19 @@
+// Share button
+(function () {
+  const btn = document.querySelector(".share-btn");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    const data = { title: document.title, url: location.href };
+    if (navigator.share) {
+      try { await navigator.share(data); } catch {}
+    } else {
+      await navigator.clipboard.writeText(location.href);
+      btn.style.color = "var(--color-accent)";
+      setTimeout(() => btn.style.color = "", 1500);
+    }
+  });
+})();
+
 document.addEventListener("keydown", e => {
   if (e.key === "ArrowLeft") {
     const a = document.querySelector(".nav-prev[href]");

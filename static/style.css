@@ -25,20 +25,20 @@
   --space-xl: clamp(2rem, 1.5rem + 2.5vw, 4rem);
   --space-2xl: clamp(3rem, 2rem + 3.5vw, 5rem);
 
-  /* Fluid type */
-  --text-xs: clamp(0.65rem, 0.6rem + 0.2vw, 0.75rem);
-  --text-s: clamp(0.78rem, 0.72rem + 0.3vw, 0.85rem);
-  --text-base: clamp(0.88rem, 0.82rem + 0.3vw, 0.95rem);
-  --text-m: clamp(1rem, 0.9rem + 0.4vw, 1.15rem);
-  --text-l: clamp(1.15rem, 1rem + 0.5vw, 1.4rem);
-  --text-xl: clamp(1.3rem, 1.1rem + 0.6vw, 1.6rem);
+  /* Fluid type — clamp(min, preferred, max) anchored to Tailwind scale */
+  --text-xs: clamp(0.7rem, 0.65rem + 0.25vw, 0.8rem);     /* ~11–13px */
+  --text-s: clamp(0.8rem, 0.75rem + 0.25vw, 0.9rem);      /* ~13–14px */
+  --text-base: clamp(0.9rem, 0.85rem + 0.25vw, 1rem);      /* ~14–16px */
+  --text-m: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);       /* ~16–18px */
+  --text-l: clamp(1.125rem, 1.05rem + 0.35vw, 1.3rem);     /* ~18–21px */
+  --text-xl: clamp(1.3rem, 1.15rem + 0.5vw, 1.55rem);      /* ~21–25px */
 
   --max-width: 540px;
   --leading: 1.75;
 }
 
 html {
-  font-size: clamp(16px, 15px + 0.25vw, 18px);
+  font-size: clamp(15px, 14.5px + 0.25vw, 17px);
   line-height: var(--leading);
   scroll-behavior: smooth;
 }
@@ -118,7 +118,7 @@ main {
 }
 
 .collections main {
-  max-width: 900px;
+  max-width: 1000px;
 }
 
 /* === Home Page === */
@@ -143,7 +143,7 @@ main {
 
 .hero {
   text-align: center;
-  padding: var(--space-2xl) 0 var(--space-l);
+  padding: var(--space-s) 0 var(--space-l);
 }
 
 .hero h1 {
@@ -160,12 +160,28 @@ main {
   letter-spacing: 0.1em;
 }
 
+.hero-illustration {
+  margin-top: var(--space-m);
+}
+
+.hero-illustration img {
+  max-width: 260px;
+  margin: 0 auto;
+}
+
+.hero-illustration figcaption {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin-top: var(--space-s);
+  font-style: italic;
+}
+
 .collections-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-xl) var(--space-l);
   padding: var(--space-l) 0 var(--space-xl);
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -218,14 +234,14 @@ main {
 }
 
 .collection-cover-large {
-  max-width: 220px;
+  max-width: 300px;
   border-radius: 2px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
   margin: 0 auto var(--space-l);
 }
 
 .collection-detail h1 {
-  font-size: var(--text-l);
+  font-size: var(--text-xl);
   font-weight: 400;
   font-style: italic;
 }
@@ -233,12 +249,12 @@ main {
 .collection-detail .collection-subtitle {
   color: var(--color-muted);
   margin-top: var(--space-xs);
-  font-size: var(--text-base);
+  font-size: var(--text-m);
 }
 
 .collection-detail .collection-author {
   font-family: var(--font-sans);
-  font-size: var(--text-s);
+  font-size: var(--text-base);
   color: var(--color-muted);
   margin-top: var(--space-xs);
   letter-spacing: 0.03em;
@@ -328,7 +344,7 @@ main {
 }
 
 .poem-content h1 {
-  font-size: var(--text-m);
+  font-size: var(--text-l);
   font-weight: 400;
   font-style: italic;
   letter-spacing: 0.04em;
@@ -375,9 +391,17 @@ main {
 }
 
 /* === Inline poem images === */
+.poem-body {
+  position: relative;
+}
+
+.poem-content figure {
+  margin: var(--space-m) auto var(--space-l);
+  max-width: 500px;
+}
+
 .poem-image {
   display: block;
-  margin: 0 0 var(--space-m);
 }
 
 .poem-image img {
@@ -442,7 +466,7 @@ main {
 .poem-body p {
   margin-bottom: var(--space-m);
   line-height: 1.65;
-  font-size: var(--text-base);
+  font-size: var(--text-m);
 }
 
 /* === Picture Page === */
@@ -472,6 +496,24 @@ main {
   color: var(--color-muted);
   margin-top: var(--space-m);
   font-size: var(--text-s);
+}
+
+/* === Share Button === */
+.share-btn {
+  display: block;
+  margin: var(--space-l) auto 0;
+  padding: var(--space-xs) var(--space-s);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.share-btn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 /* === Poem Navigation === */

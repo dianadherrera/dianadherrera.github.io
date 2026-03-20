@@ -9,6 +9,7 @@
   <meta property="og:type" content="article">
   <meta property="og:description" content="{% block og_description %}{{ config.extra.tagline }} — {{ config.title }}{% endblock %}">
   {% block og_image %}{% endblock %}
+  {% if current_url %}<meta property="og:url" content="{{ current_url }}">{% endif %}
   <meta property="og:site_name" content="{{ config.title }}">
   <link rel="icon" href="{{ get_url(path='favicon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ get_url(path='style.css') }}">

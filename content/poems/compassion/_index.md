@@ -6,6 +6,7 @@ template: collection.html
 extra:
   lang: en
   cover: cover.jpg
+  status: ready
   sections:
   - weight: 0
     title: Exclusion

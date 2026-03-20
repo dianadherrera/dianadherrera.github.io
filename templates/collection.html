@@ -35,11 +35,14 @@
   {% endif %}
   <h1>{{ section.title }}</h1>
   <p class="collection-author">{{ config.title }}</p>
+  {% set status = section.extra.status | default(value="draft") %}
+  {% if status != "draft" %}
   <nav class="collection-actions" aria-label="Downloads">
     <a href="/pdf/{{ section.components | last }}.pdf" class="action-link">PDF</a>
     <a href="/epub/{{ section.components | last }}.epub" class="action-link">EPUB</a>
     {% if config.extra.donate %}<a href="{{ config.extra.donate }}" class="action-link">Donaciones</a>{% endif %}
   </nav>
+  {% endif %}
   <nav class="table-of-contents">
     <ol>
       {% if section.subsections | length > 0 %}
