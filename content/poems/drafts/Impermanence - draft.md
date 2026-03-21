@@ -1,7 +1,7 @@
 ---
-title: Impermanence
-draft: false
-date: 2026-01-10
+title: 'Impermanence'
+draft: true
+date: '2026-01-10'
 extra:
   entry_type: poem
   lang: en
@@ -20,7 +20,7 @@ does someday become today?
 The longing
 for days outside time,
 
-Moments of wonder 
+Wonder 
 within the reach of my hand.
 
 Those nights,

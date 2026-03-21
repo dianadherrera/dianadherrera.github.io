@@ -8,7 +8,7 @@ extra:
 ---
 
 Your heart sinks at the first chord 
-as the violin pierces through.
+as the violin pierces through
 Memories of butterflies 
 lived in your youth.
 

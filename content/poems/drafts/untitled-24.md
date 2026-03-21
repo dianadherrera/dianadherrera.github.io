@@ -8,9 +8,12 @@ extra:
 ---
 
 Trust
-I just need to keep walking.
-to keep trying
-all that i ever wanted, has happened
+
+Keep walking,
+keep trying
+All that I have ever wanted 
+has happened.
+
 after I have dedicated and devoted time, effort and patience to it
 i am sure, the things that I want can manifest.
 I really do.
@@ -38,11 +41,16 @@ Omedeto!
 con raz´ón estoy sanando
 no ves todo el amor que le he puesto
 a mi dolor?
-el amor que le he puesto a mi intenci´ón?
-aaaah, que gran satisfacci´ón
+el amor que le he puesto a mi intención?
+aaaah, que gran satisfacción
 que bello coraz´ón
 que refulgante 
-que devoci´ón
-profunda
+que devoción tan profunda
 a encontrar tu camino
 a tu camino
+
+
+No ves todo el amor 
+que le has puesto a tu dolor?
+que devoción tan profunda
+a encontrar tu camino

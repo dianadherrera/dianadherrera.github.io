@@ -10,6 +10,6 @@ extra:
 ![Yellow wild flowers in bloom](wild-flower.jpg)
 
 Is it true?
-that as soon as you witness
+That as soon as you witness
 the dance of a wild flower,
 sorrow is swept away.

@@ -22,6 +22,5 @@ and she likes me.
 
 Bare soul
 at your feet.
-Your step
-light, gentle,
+You step
 as in reverence.

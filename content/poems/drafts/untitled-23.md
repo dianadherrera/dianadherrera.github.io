@@ -7,7 +7,7 @@ extra:
   lang: es
 ---
 
-Pense que pasar´íamos la vida riendo
+Pense que pasaríamos la vida riendo
 nuestras risas se me antojaron eternas.
 complicidad como pan sobre mantequilla
 

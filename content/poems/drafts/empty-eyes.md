@@ -7,7 +7,7 @@ extra:
   lang: en
 ---
 
-Death are the heedless
+Death are the heedless,
 
 the ones without intention.
 
