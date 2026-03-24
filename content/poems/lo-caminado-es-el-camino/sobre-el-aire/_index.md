@@ -2,9 +2,9 @@
 title: Sobre el aire
 weight: 4
 sort_by: weight
-template: section-picture.html
+template: chapter.html
 extra:
-  entry_type: picture
-  image: sobre-el-aire.jpg
-  caption: ligera y flexible
+  lang: es
+  cover: cover.jpg
+  subtitle: ligera y flexible
 ---

@@ -2,9 +2,9 @@
 title: Sobre la oscuridad
 weight: 2
 sort_by: weight
-template: section-picture.html
+template: chapter.html
 extra:
-  entry_type: picture
-  image: sobre-la-oscuridad.jpg
-  caption: por Carlos Meza
+  lang: es
+  cover: cover.jpg
+  credit: Fotografía de Carlos Meza
 ---

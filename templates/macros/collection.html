@@ -1,0 +1,41 @@
+{#
+  Shared macros for collection and chapter templates.
+#}
+
+{% macro og_image(section) %}
+  {%- if section.extra.cover -%}
+    {%- set base = section.path | trim_start_matches(pat="/") | trim_end_matches(pat="/") -%}
+    {%- set img_path = base ~ "/" ~ section.extra.cover -%}
+    {%- set og = resize_image(path=img_path, width=1200, op="fit_width") -%}
+    <meta property="og:image" content="{{ og.url }}">
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro header(section) %}
+  <h1>{{ section.title }}</h1>
+  {% if section.extra.cover %}
+    {% set base = section.path | trim_start_matches(pat="/") | trim_end_matches(pat="/") %}
+    {% set img_path = base ~ "/" ~ section.extra.cover %}
+    {% set lq = resize_image(path=img_path, width=30, op="fit_width", format="webp", quality=20) %}
+    {% set sm = resize_image(path=img_path, width=240, op="fit_width", format="webp", quality=80) %}
+    {% set lg = resize_image(path=img_path, width=440, op="fit_width", format="webp", quality=80) %}
+    {% set full = resize_image(path=img_path, width=1200, op="fit_width") %}
+    <figure class="cover-figure">
+      <a href="{{ full.url }}" target="_blank" rel="noopener" class="cover-link" aria-label="View full cover image">
+        <img
+          src="{{ sm.url }}"
+          srcset="{{ sm.url }} 240w, {{ lg.url }} 440w"
+          sizes="(max-width: 600px) 70vw, 16rem"
+          alt="{{ section.title }}"
+          class="cover-large"
+          style="background: url('{{ lq.url }}') center/cover"
+          width="{{ sm.width }}"
+          height="{{ sm.height }}"
+          fetchpriority="high"
+        >
+      </a>
+      {% if section.extra.credit %}<figcaption class="meta credit">{{ section.extra.credit }}</figcaption>{% endif %}
+    </figure>
+  {% endif %}
+  {% if section.extra.subtitle %}<p class="tagline">{{ section.extra.subtitle }}</p>{% endif %}
+{%- endmacro %}

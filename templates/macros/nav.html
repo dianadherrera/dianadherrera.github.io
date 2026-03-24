@@ -1,0 +1,76 @@
+{#
+  Shared page navigation — prev/next links for book-like reading flow.
+  Works for all page types (poem, interlude) in both flat and grouped collections.
+
+  For interludes in grouped collections, page.higher/lower links to sibling
+  interludes rather than subsections. We override: opening interludes go to
+  the first subsection, closing interludes come from the last subsection.
+#}
+
+{% macro page_nav(page, config) %}
+{% set current = get_section(path=page.ancestors | last) %}
+{% set is_interlude = page.extra.entry_type | default(value="") == "interlude" %}
+{% set grouped = current.subsections | length > 0 %}
+<nav class="poem-nav">
+  {% if is_interlude and grouped and page.extra.position | default(value="start") == "end" %}
+    {% set last_sub = get_section(path=current.subsections | last) %}
+    {% if last_sub.pages | length > 0 %}
+      <a href="{{ last_sub.pages | last | get(key='path') }}" class="nav-prev">&larr; {{ last_sub.pages | last | get(key='title') }}</a>
+    {% else %}
+      <a href="{{ last_sub.path }}" class="nav-prev">&larr; {{ last_sub.title }}</a>
+    {% endif %}
+    <span class="nav-next" aria-hidden="true"></span>
+  {% elif is_interlude and grouped %}
+    <a href="{{ current.path }}" class="nav-prev">&larr; {{ current.title }}</a>
+    {% set first_sub = get_section(path=current.subsections | first) %}
+    <a href="{{ first_sub.path }}" class="nav-next">{{ first_sub.title }} &rarr;</a>
+  {% else %}
+    {% if page.lower %}
+      <a href="{{ page.lower.path }}" class="nav-prev">&larr; {{ page.lower.title }}</a>
+    {% else %}
+      <a href="{{ current.path }}" class="nav-prev">&larr; {{ current.title }}</a>
+    {% endif %}
+    {% if page.higher %}
+      <a href="{{ page.higher.path }}" class="nav-next">{{ page.higher.title }} &rarr;</a>
+    {% else %}
+      {% if current.ancestors | length > 2 %}
+        {% set up = get_section(path=current.ancestors | last) %}
+        {% set_global next = false %}
+        {% set_global found = false %}
+        {% for p in up.subsections %}
+          {% set sib = get_section(path=p) %}
+          {% if found and not next %}
+            {% set_global next = sib %}
+          {% endif %}
+          {% if sib.path == current.path %}
+            {% set_global found = true %}
+          {% endif %}
+        {% endfor %}
+        {% if next %}
+          <a href="{{ next.path }}" class="nav-next">{{ next.title }} &rarr;</a>
+        {% else %}
+          {# Last subsection — check for closing interlude #}
+          {% set col = get_section(path=current.ancestors | last) %}
+          {% set_global closing = false %}
+          {% for p in col.pages %}
+            {% if p.extra.entry_type | default(value="") == "interlude" and p.extra.position | default(value="start") == "end" %}
+              {% set_global closing = p %}
+            {% endif %}
+          {% endfor %}
+          {% if closing %}
+            <a href="{{ closing.path }}" class="nav-next">{{ closing.title }} &rarr;</a>
+          {% else %}
+            <span class="nav-next" aria-hidden="true"></span>
+          {% endif %}
+        {% endif %}
+      {% elif current.subsections | length > 0 %}
+        {% set first = get_section(path=current.subsections | first) %}
+        <a href="{{ first.path }}" class="nav-next">{{ first.title }} &rarr;</a>
+      {% else %}
+        <span class="nav-next" aria-hidden="true"></span>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+  <p class="nav-copyright meta">&copy; {{ config.title }} &middot; <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="license">CC BY-NC-ND 4.0</a></p>
+</nav>
+{% endmacro %}

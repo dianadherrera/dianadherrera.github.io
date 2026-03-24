@@ -1,5 +1,5 @@
 ---
 title: Poesía
 sort_by: weight
-template: collections.html
+template: poems.html
 ---

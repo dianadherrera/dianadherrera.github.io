@@ -6,4 +6,5 @@ template: collection.html
 extra:
   lang: es
   cover: cover.jpg
+  status: ready
 ---

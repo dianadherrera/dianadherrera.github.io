@@ -17,21 +17,35 @@
   {%- set stanzas = body | split(pat="
 
 ") -%}
+  {%- set_global in_body = false -%}
   {%- for stanza in stanzas -%}
     {%- set s = stanza | trim -%}
     {%- if s is starting_with("![") -%}
+      {%- if in_body -%}</div>{%- set_global in_body = false -%}{%- endif -%}
       {{ self::image(text=s, base_path=base_path) }}
     {%- elif s != "" -%}
+      {%- if not in_body -%}<div class="poem-body">{%- set_global in_body = true -%}{%- endif -%}
       {{ self::stanza(text=s) }}
     {%- endif -%}
   {%- endfor -%}
+  {%- if in_body -%}</div>{%- endif -%}
 {% endmacro %}
+
+{% macro plaintext(path) %}
+  {%- set raw = load_data(path=path, format="plain") -%}
+  {%- set body = raw | regex_replace(pattern="^---[\s\S]*?---\n*", rep="") | trim -%}
+  {%- set body = body | regex_replace(pattern="!\[[^\]]*\]\([^)]+\)\n*", rep="") -%}
+  {%- set body = body | regex_replace(pattern="\*\*([^*]+)\*\*", rep="$1") -%}
+  {%- set body = body | regex_replace(pattern="\*([^*]+)\*", rep="$1") -%}
+  {%- set body = body | regex_replace(pattern="\[([^\]]+)\]\([^)]+\)", rep="$1") -%}
+  {{- body | trim -}}
+{%- endmacro %}
 
 {% macro stanza(text) %}
   {%- set html = text
     | regex_replace(pattern="\*\*([^*]+)\*\*", rep="<strong>$1</strong>")
     | regex_replace(pattern="\*([^*]+)\*", rep="<em>$1</em>")
-    | regex_replace(pattern="\b_([^_]+)_\b", rep="<em>$1</em>")
+    | regex_replace(pattern="_([^_]+)_", rep="<em>$1</em>")
     | regex_replace(pattern="\[([^\]]+)\]\(([^)]+)\)", rep="<a href='$2'>$1</a>")
     | regex_replace(pattern=" *\n *", rep="<br>")
   -%}
@@ -46,21 +60,19 @@
     {%- set content_path = raw_src | trim_start_matches(pat="/") -%}
   {%- else -%}
     {%- set base = base_path | trim_start_matches(pat="/") -%}
-    {%- set content_path = base ~ raw_src -%}
+    {%- set content_path = base ~ "/" ~ raw_src -%}
   {%- endif -%}
   {%- set full = resize_image(path=content_path, width=1200, op="fit_width", format="webp", quality=85) -%}
-  {%- set sized = resize_image(path=content_path, width=600, op="fit_width", format="webp", quality=80) -%}
+  {%- set sized = resize_image(path=content_path, width=750, op="fit_width", format="webp", quality=80) -%}
   <figure>
-    <a href="{{ full.url }}" target="_blank" class="poem-image">
+    <a href="{{ full.url }}" target="_blank" rel="noopener" class="poem-image" aria-label="View full image: {{ alt }}">
       <img
         src="{{ sized.url }}"
-        srcset="{{ sized.url }} 600w, {{ full.url }} 1200w"
-        sizes="(max-width: 600px) 100vw, 600px"
+        srcset="{{ sized.url }} {{ sized.width }}w, {{ full.url }} {{ full.width }}w"
+        sizes="(max-width: 600px) 100vw, 750px"
         alt="{{ alt }}"
         width="{{ sized.width }}"
         height="{{ sized.height }}"
-        loading="lazy"
-        decoding="async"
       >
     </a>
   </figure>

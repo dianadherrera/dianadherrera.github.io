@@ -54,6 +54,8 @@ def read_collections():
         if meta.get("draft"):
             continue
         extra = meta.get("extra", {})
+        if extra.get("status", "ready") == "draft":
+            continue
         cols.append({"slug": d.name, **meta, **extra})
 
     cols.sort(key=lambda c: c.get("weight", 0))
@@ -64,8 +66,12 @@ def read_entries(slug):
     """Read all entries for a collection, including subsections."""
     base = ROOT / "content" / "poems" / slug
     idx, _ = parse_frontmatter((base / "_index.md").read_text())
-    entries = _read_poems(base)
 
+    # Flat poems at collection root
+    flat = _read_poems(base)
+
+    # Subsections: each section header followed by its poems
+    subs = []
     for sub in sorted(base.iterdir()):
         if not sub.is_dir() or sub.name.startswith("."):
             continue
@@ -75,16 +81,32 @@ def read_entries(slug):
         meta, _ = parse_frontmatter(si.read_text())
         extra = meta.get("extra", {})
 
-        entries.append({
+        header = {
             **extra,
             "title": meta.get("title", ""),
             "slug": sub.name,
             "weight": meta.get("weight", 0),
-        })
+        }
+        poems = _read_poems(sub)
+        poems.sort(key=lambda e: e.get("weight", 0))
+        subs.append((header, poems))
 
-        entries.extend(_read_poems(sub))
+    subs.sort(key=lambda s: s[0].get("weight", 0))
 
-    entries.sort(key=lambda e: e.get("weight", 0))
+    if subs:
+        # Grouped: interleave flat pages and section groups by weight.
+        # Each section group (header + poems) uses the header's weight.
+        flat.sort(key=lambda e: e.get("weight", 0))
+        groups = [(h["weight"], [h] + poems) for h, poems in subs]
+        singles = [(e["weight"], [e]) for e in flat]
+        merged = sorted(groups + singles, key=lambda x: x[0])
+        entries = []
+        for _, items in merged:
+            entries.extend(items)
+    else:
+        entries = flat
+        entries.sort(key=lambda e: e.get("weight", 0))
+
     return idx, entries
 
 

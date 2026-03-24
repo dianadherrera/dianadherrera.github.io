@@ -1,0 +1,75 @@
+{#
+  Ancestor resolution for poem pages.
+
+  Resolves the collection (col) and optional subsection (sub)
+  from a page's ancestor chain. Returns rendered HTML fragments
+  so each block doesn't repeat the same logic.
+#}
+
+{% macro breadcrumb(page) %}
+  {%- set parent = get_section(path=page.ancestors | last) -%}
+  {%- if parent.ancestors | length > 2 -%}
+    {%- set col = get_section(path=parent.ancestors | last) -%}
+    {%- set sub = parent -%}
+  {%- else -%}
+    {%- set col = parent -%}
+  {%- endif -%}
+  <li><a href="/poems/">Poesía</a></li>
+  <li><a href="{{ col.path }}">{{ col.title }}</a></li>
+  {%- if sub %}<li><a href="{{ sub.path }}">{{ sub.title }}</a></li>{% endif %}
+  <li><a href="{{ page.path }}" aria-current="page">{{ page.title }}</a></li>
+{%- endmacro %}
+
+{% macro lang(page, default) %}
+  {%- set parent = get_section(path=page.ancestors | last) -%}
+  {%- if parent.ancestors | length > 2 -%}
+    {%- set col = get_section(path=parent.ancestors | last) -%}
+  {%- else -%}
+    {%- set col = parent -%}
+  {%- endif -%}
+  {{- col.extra.lang | default(value=default) -}}
+{%- endmacro %}
+
+{% macro title(page, site_title) %}
+  {%- set parent = get_section(path=page.ancestors | last) -%}
+  {%- if parent.ancestors | length > 2 -%}
+    {%- set col = get_section(path=parent.ancestors | last) -%}
+  {%- else -%}
+    {%- set col = parent -%}
+  {%- endif -%}
+  {{- page.title }} · {{ col.title }} · {{ site_title -}}
+{%- endmacro %}
+
+{% macro og_title(page) %}
+  {%- set parent = get_section(path=page.ancestors | last) -%}
+  {%- if parent.ancestors | length > 2 -%}
+    {%- set col = get_section(path=parent.ancestors | last) -%}
+  {%- else -%}
+    {%- set col = parent -%}
+  {%- endif -%}
+  {{- page.title }} — {{ col.title -}}
+{%- endmacro %}
+
+{% macro og_image(page) %}
+  {%- set parent = get_section(path=page.ancestors | last) -%}
+  {%- if parent.ancestors | length > 2 -%}
+    {%- set col = get_section(path=parent.ancestors | last) -%}
+  {%- else -%}
+    {%- set col = parent -%}
+  {%- endif -%}
+  {%- if col.extra.cover -%}
+    {%- set base = col.path | trim_start_matches(pat="/") | trim_end_matches(pat="/") -%}
+    {%- set img = base ~ "/" ~ col.extra.cover -%}
+    {%- set og = resize_image(path=img, width=1200, op="fit_width") -%}
+    <meta property="og:image" content="{{ og.url }}">
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro col_path(page) %}
+  {%- set parent = get_section(path=page.ancestors | last) -%}
+  {%- if parent.ancestors | length > 2 -%}
+    {{- parent.ancestors | last -}}
+  {%- else -%}
+    {{- page.ancestors | last -}}
+  {%- endif -%}
+{%- endmacro %}

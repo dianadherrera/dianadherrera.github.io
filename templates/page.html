@@ -1,147 +1,35 @@
 {% extends "base.html" %}
 {% import "macros/poem.html" as poem %}
+{% import "macros/ancestors.html" as ctx %}
+{% import "macros/nav.html" as nav %}
 
-{% block lang %}
-  {%- set parent = get_section(path=page.ancestors | last) -%}
-  {%- if parent.ancestors | length > 2 -%}
-    {%- set col = get_section(path=parent.ancestors | last) -%}
-  {%- else -%}
-    {%- set col = parent -%}
-  {%- endif -%}
-  {{ col.extra.lang | default(value=config.default_language) }}
-{%- endblock %}
+{% block lang %}{{ ctx::lang(page=page, default=config.default_language) }}{% endblock %}
+{% block title %}{{ ctx::title(page=page, site_title=config.title) }}{% endblock %}
+{% block og_title %}{{ ctx::og_title(page=page) }}{% endblock %}
+{% block og_image %}{{ ctx::og_image(page=page) }}{% endblock %}
+{% block measure %}50rem{% endblock %}
 
-{% block title %}
-  {%- set parent = get_section(path=page.ancestors | last) -%}
-  {%- if parent.ancestors | length > 2 -%}
-    {%- set col = get_section(path=parent.ancestors | last) -%}
-  {%- else -%}
-    {%- set col = parent -%}
-  {%- endif -%}
-  {{ config.title }} | {{ col.title }} | {{ page.title }}
-{%- endblock %}
+{% block meta_description %}{% block og_description %}
+  {{- poem::plaintext(path=page.relative_path) | truncate(length=200, end="…") | replace(from="
+", to="&#10;") -}}
+{% endblock %}{% endblock %}
 
-{% block og_title %}
-  {%- set parent = get_section(path=page.ancestors | last) -%}
-  {%- if parent.ancestors | length > 2 -%}
-    {%- set col = get_section(path=parent.ancestors | last) -%}
-  {%- else -%}
-    {%- set col = parent -%}
-  {%- endif -%}
-  {{ page.title }} — {{ col.title }}
-{%- endblock %}
-
-{% block og_description %}{{ page.summary | default(value=config.extra.tagline) }}{% endblock %}
-{% block meta_description %}{{ page.summary | default(value=config.extra.tagline) }}{% endblock %}
-
-{% block og_image %}
-  {%- set parent = get_section(path=page.ancestors | last) -%}
-  {%- if parent.ancestors | length > 2 -%}
-    {%- set col = get_section(path=parent.ancestors | last) -%}
-  {%- else -%}
-    {%- set col = parent -%}
-  {%- endif -%}
-  {%- if col.extra.cover -%}
-    {%- set slug = col.components | last -%}
-    {%- set img_path = "poems/" ~ slug ~ "/" ~ col.extra.cover -%}
-    {%- set og = resize_image(path=img_path, width=1200, op="fit_width") -%}
-    <meta property="og:image" content="{{ og.url }}">
-  {%- endif -%}
-{% endblock %}
-
-{% block body_class %}{% if page.extra.entry_type == "picture" %}picture{% else %}poem{% endif %}{% endblock %}
-
-{% block breadcrumb %}
-  {%- set parent = get_section(path=page.ancestors | last) -%}
-  {%- if parent.ancestors | length > 2 -%}
-    {%- set col = get_section(path=parent.ancestors | last) -%}
-    {%- set sub = parent -%}
-  {%- else -%}
-    {%- set col = parent -%}
-  {%- endif -%}
-  <span class="sep">/</span><a href="/poems/">Poesía</a>
-  <span class="sep">/</span><a href="{{ col.path }}">{{ col.title }}</a>
-  {% if sub %}<span class="sep">/</span><a href="{{ sub.path }}">{{ sub.title }}</a>{% endif %}
-  <span class="sep">/</span><a href="{{ page.path }}">{{ page.title }}</a>
-{% endblock %}
-
+{% block breadcrumb %}{{ ctx::breadcrumb(page=page) }}{% endblock %}
 {% block content %}
-{% set parent = get_section(path=page.ancestors | last) %}
-{% if parent.ancestors | length > 2 %}
-  {% set col = get_section(path=parent.ancestors | last) %}
-  {% set sub = parent %}
-{% else %}
-  {% set col = parent %}
-  {% set sub = false %}
-{% endif %}
-{% if page.extra.entry_type == "picture" %}
-    <article class="picture-content">
-      {% if page.title %}<h1>{{ page.title }}</h1>{% endif %}
-      <figure>
-        {% if page.extra.image %}
-          {% set base = col.path | trim_start_matches(pat="/") %}
-          {% set img_content_path = base ~ page.extra.image %}
-          {% set full = resize_image(path=img_content_path, width=1200, op="fit_width", format="webp", quality=85) %}
-          {% set sized = resize_image(path=img_content_path, width=800, op="fit_width", format="webp", quality=80) %}
-          <a href="{{ full.url }}" target="_blank">
-            <img
-              src="{{ sized.url }}"
-              srcset="{{ sized.url }} {{ sized.width }}w, {{ full.url }} {{ full.width }}w"
-              sizes="(max-width: 600px) 100vw, 800px"
-              alt="{{ page.title | default(value='') }}"
-              width="{{ sized.width }}"
-              height="{{ sized.height }}"
-              class="picture-full"
-              loading="lazy"
-              decoding="async"
-            >
-          </a>
-        {% endif %}
-        {% if page.extra.caption %}<figcaption class="picture-caption">{{ page.extra.caption }}</figcaption>{% endif %}
-      </figure>
-    </article>
-{% else %}
-    <article class="poem-content">
-      <h1>{{ page.title }}</h1>
-      {% if page.date %}<time class="poem-date" datetime="{{ page.date }}">{{ page.date }}</time>{% endif %}
-      {% if page.extra.epigraph %}<blockquote class="poem-epigraph">{{ page.extra.epigraph | regex_replace(pattern="\[([^\]]+)\]\(([^)]+)\)", rep="<a href='$2'>$1</a>") | safe }}</blockquote>{% endif %}
-      <div class="poem-body">
-        {{ poem::render(path=page.relative_path, base_path=col.path) }}
-      </div>
-    </article>
-{% endif %}
-    <nav class="poem-nav">
-      {% if page.lower %}
-        <a href="{{ page.lower.path }}" class="nav-prev">&larr; {{ page.lower.title }}</a>
-      {% else %}
-        {% set current = get_section(path=page.ancestors | last) %}
-        <a href="{{ current.path }}" class="nav-prev">&larr; {{ current.title }}</a>
-      {% endif %}
-      {% if page.higher %}
-        <a href="{{ page.higher.path }}" class="nav-next">{{ page.higher.title }} &rarr;</a>
-      {% else %}
-        {% set current = get_section(path=page.ancestors | last) %}
-        {% if current.ancestors | length > 1 %}
-          {% set up = get_section(path=current.ancestors | last) %}
-          {% set_global next = false %}
-          {% set_global found = false %}
-          {% for p in up.subsections %}
-            {% set sib = get_section(path=p) %}
-            {% if found and not next %}
-              {% set_global next = sib %}
-            {% endif %}
-            {% if sib.path == current.path %}
-              {% set_global found = true %}
-            {% endif %}
-          {% endfor %}
-          {% if next %}
-            <a href="{{ next.path }}" class="nav-next">{{ next.title }} &rarr;</a>
-          {% else %}
-            <span class="nav-next" aria-hidden="true"></span>
-          {% endif %}
-        {% else %}
-          <span class="nav-next" aria-hidden="true"></span>
-        {% endif %}
-      {% endif %}
-    </nav>
+{% set col = get_section(path=ctx::col_path(page=page) | trim) %}
+<article class="poem-content titled stack text-center">
+  <h1>{{ page.title }}</h1>
+  {% if page.extra.epigraph %}<blockquote class="poem-epigraph">{{ page.extra.epigraph | regex_replace(pattern="\[([^\]]+)\]\(([^)]+)\)", rep="<a href='$2'>$1</a>") | safe }}</blockquote>{% endif %}
+  {{ poem::render(path=page.relative_path, base_path=col.path) }}
+  <button class="share-btn" aria-label="Share">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="18" cy="5" r="3"/>
+      <circle cx="6" cy="12" r="3"/>
+      <circle cx="18" cy="19" r="3"/>
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+    </svg>
+  </button>
+</article>
+{{ nav::page_nav(page=page, config=config) }}
 {% endblock %}

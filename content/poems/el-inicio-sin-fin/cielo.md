@@ -2,7 +2,7 @@
 title: Cielo
 weight: 1
 extra:
-  entry_type: picture
-  image: cielo.jpg
-  caption: Cielo
+  entry_type: poem
 ---
+
+![Cielo](cielo.jpg)

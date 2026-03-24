@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% import "macros/collection.html" as col %}
+
+{% block lang %}{{ section.extra.lang | default(value=config.default_language) }}{% endblock %}
+{% block title %}{{ section.title }} · {{ config.title }}{% endblock %}
+{% block measure %}50rem{% endblock %}
+{% block og_title %}{{ section.title }}{% endblock %}
+{% block og_image %}{{ col::og_image(section=section) }}{% endblock %}
+{% block breadcrumb %}
+  {% set parent = get_section(path=section.ancestors | last) %}
+  <li><a href="/poems/">Poesía</a></li>
+  <li><a href="{{ parent.path }}">{{ parent.title }}</a></li>
+  <li><a href="{{ section.path }}" aria-current="page">{{ section.title }}</a></li>
+{% endblock %}
+{% block content %}
+{% set parent = get_section(path=section.ancestors | last) %}
+<section class="hero titled stack text-center">
+  <h1>{{ section.title }}</h1>
+  {% if section.extra.subtitle %}<p class="tagline">{{ section.extra.subtitle }}</p>{% endif %}
+</section>
+<article class="poem-content chapter-content stack text-center">
+  {% if section.extra.cover %}
+    {% set base = section.path | trim_start_matches(pat="/") | trim_end_matches(pat="/") %}
+    {% set img_path = base ~ "/" ~ section.extra.cover %}
+    {% set sm = resize_image(path=img_path, width=600, op="fit_width", format="webp", quality=80) %}
+    {% set lg = resize_image(path=img_path, width=1200, op="fit_width", format="webp", quality=80) %}
+    <figure class="poem-image">
+      <img
+        src="{{ sm.url }}"
+        srcset="{{ sm.url }} 600w, {{ lg.url }} 1200w"
+        sizes="(max-width: 600px) 90vw, 600px"
+        alt="{{ section.title }}"
+        width="{{ sm.width }}"
+        height="{{ sm.height }}"
+      >
+      {% if section.extra.credit %}<figcaption class="meta credit">{{ section.extra.credit }}</figcaption>{% endif %}
+    </figure>
+  {% endif %}
+</article>
+
+<nav class="poem-nav">
+  {% set_global prev = false %}
+  {% set_global next = false %}
+  {% set_global found = false %}
+  {% for p in parent.subsections %}
+    {% set sib = get_section(path=p) %}
+    {% if found and not next %}
+      {% set_global next = sib %}
+    {% endif %}
+    {% if sib.path == section.path %}
+      {% set_global found = true %}
+    {% endif %}
+    {% if not found %}
+      {% set_global prev = sib %}
+    {% endif %}
+  {% endfor %}
+  {% if prev %}
+    {% set full = get_section(path=prev.relative_path) %}
+    {% if full.pages | length > 0 %}
+      <a href="{{ full.pages | last | get(key='path') }}" class="nav-prev">&larr; {{ full.pages | last | get(key='title') }}</a>
+    {% else %}
+      <a href="{{ prev.path }}" class="nav-prev">&larr; {{ prev.title }}</a>
+    {% endif %}
+  {% else %}
+    <a href="{{ parent.path }}" class="nav-prev">&larr; {{ parent.title }}</a>
+  {% endif %}
+  {% if section.pages | length > 0 %}
+    <a href="{{ section.pages | first | get(key='path') }}" class="nav-next">{{ section.pages | first | get(key='title') }} &rarr;</a>
+  {% elif next %}
+    <a href="{{ next.path }}" class="nav-next">{{ next.title }} &rarr;</a>
+  {% else %}
+    <span class="nav-next" aria-hidden="true"></span>
+  {% endif %}
+  <p class="nav-copyright meta">&copy; {{ config.title }} &middot; <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="license">CC BY-NC-ND 4.0</a></p>
+</nav>
+{% endblock %}

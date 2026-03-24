@@ -1,4 +1,5 @@
+.obsidian/
 .playwright-cli/
 public/
-scripts/typst/data/
 static/processed_images/
+tmp/

@@ -6,28 +6,31 @@
   <title>{% block title %}{{ config.title }}{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}{{ config.extra.tagline }} — {{ config.title }}{% endblock %}">
   <meta property="og:title" content="{% block og_title %}{{ config.title }}{% endblock %}">
-  <meta property="og:type" content="article">
+  <meta property="og:type" content="{% block og_type %}article{% endblock %}">
   <meta property="og:description" content="{% block og_description %}{{ config.extra.tagline }} — {{ config.title }}{% endblock %}">
   {% block og_image %}{% endblock %}
+  {% if current_url %}<meta property="og:url" content="{{ current_url }}">{% endif %}
   <meta property="og:site_name" content="{{ config.title }}">
   <link rel="icon" href="{{ get_url(path='favicon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ get_url(path='style.css') }}">
   <link rel="alternate" type="application/atom+xml" title="{{ config.title }}" href="{{ get_url(path='feed.xml') }}">
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="cover{% block body_class %}{% endblock %}">
+  <a href="#content" class="skip-link">Skip to content</a>
   <header class="site-header">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="/">{{ config.title }}</a>
-      {% block breadcrumb %}{% endblock %}
+    <nav class="breadcrumb cluster" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">{{ config.title }}</a></li>
+        {% block breadcrumb %}{% endblock %}
+      </ol>
     </nav>
   </header>
-  <main>
+  <main id="content" class="center{% block main_class %}{% endblock %}" style="--measure: {% block measure %}34rem{% endblock %}">
     {% block content %}{% endblock %}
   </main>
   <script src="{{ get_url(path='nav.js') }}"></script>
-  <footer class="site-footer">
-    <p>&copy; {{ config.title }}</p>
-    <p class="license"><a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="license">CC BY-NC-ND 4.0</a></p>
+  <footer class="site-footer text-center">
+    <p>&copy; {{ config.title }} &middot; <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="license">CC BY-NC-ND 4.0</a></p>
   </footer>
 </body>
 </html>

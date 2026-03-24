@@ -1,7 +1,7 @@
 ---
 title: A Rosario
-weight: 1
 date: '2025-01-25'
+weight: 1
 extra:
   entry_type: poem
 ---
@@ -24,7 +24,7 @@ seguimos limpiando el linaje, impulsando mujeres sagaces.
 La violencia nos hunde, acalla nuestras voces,
 tropieza esfuerzos, da noticias atroces.
 
-"_No estás sola_", nos decimos cada tanto
+"*No estás sola*", nos decimos cada tanto
 Ponemos las lágrimas con nuestras risas y pasos.
 
 Cada gota ajusta el curso,

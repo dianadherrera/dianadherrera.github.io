@@ -1,49 +1,33 @@
 {% extends "base.html" %}
+{% import "macros/collection.html" as col %}
 
 {% block lang %}{{ section.extra.lang | default(value=config.default_language) }}{% endblock %}
-{% block title %}{{ config.title }} | {{ section.title }}{% endblock %}
+{% block title %}{{ section.title }} · {{ config.title }}{% endblock %}
 {% block og_title %}{{ section.title }}{% endblock %}
-{% block og_image %}
-  {%- if section.extra.cover -%}
-    {%- set slug = section.components | last -%}
-    {%- set img_path = "poems/" ~ slug ~ "/" ~ section.extra.cover -%}
-    {%- set og = resize_image(path=img_path, width=1200, op="fit_width") -%}
-    <meta property="og:image" content="{{ og.url }}">
-  {%- endif -%}
-{% endblock %}
-{% block body_class %}collection{% endblock %}
+{% block og_image %}{{ col::og_image(section=section) }}{% endblock %}
 {% block breadcrumb %}
-  <span class="sep">/</span><a href="/poems/">Poesía</a>
-  <span class="sep">/</span><a href="{{ section.path }}">{{ section.title }}</a>
+  <li><a href="/poems/">Poesía</a></li>
+  <li><a href="{{ section.path }}" aria-current="page">{{ section.title }}</a></li>
 {% endblock %}
-
 {% block content %}
-<article class="collection-detail">
-  {% if section.extra.cover %}
-    {% set slug = section.components | last %}
-    {% set cover_path = "poems/" ~ slug ~ "/" ~ section.extra.cover %}
-    {% set cover = resize_image(path=cover_path, width=440, op="fit_width", format="webp", quality=80) %}
-    <img
-      src="{{ cover.url }}"
-      alt="{{ section.title }}"
-      width="{{ cover.width }}"
-      height="{{ cover.height }}"
-      class="collection-cover-large"
-      loading="lazy"
-      decoding="async"
-    >
-  {% endif %}
-  <h1>{{ section.title }}</h1>
-  <p class="collection-author">{{ config.title }}</p>
-  <nav class="collection-actions" aria-label="Downloads">
-    <a href="/pdf/{{ section.components | last }}.pdf" class="action-link">PDF</a>
-    <a href="/epub/{{ section.components | last }}.epub" class="action-link">EPUB</a>
-    {% if config.extra.donate %}<a href="{{ config.extra.donate }}" class="action-link">Donaciones</a>{% endif %}
+<article class="collection-detail stack text-center">
+  {{ col::header(section=section) }}
+  {% set status = section.extra.status | default(value="draft") %}
+  {% if status != "draft" %}
+  <nav class="cluster" style="--flow-space: var(--space-m)" aria-label="Downloads">
+    <a href="/pdf/{{ section.components | last }}.pdf" class="link-muted meta">PDF</a>
+    <a href="/epub/{{ section.components | last }}.epub" class="link-muted meta">EPUB</a>
+    {% if config.extra.donate %}<a href="{{ config.extra.donate }}" class="link-muted meta">Donaciones</a>{% endif %}
   </nav>
-  <nav class="table-of-contents">
-    <ol>
-      {% if section.subsections | length > 0 %}
-        {# Collection with picture-sections: show sections with their poems indented #}
+  {% endif %}
+  <nav class="toc" aria-label="Table of contents">
+    {% if section.subsections | length > 0 %}
+      {% for page in section.pages %}
+        {% if page.extra.entry_type == "interlude" and page.extra.position | default(value="start") == "start" %}
+          <a href="{{ page.path }}" class="toc-interlude">{{ page.content | striptags }}</a>
+        {% endif %}
+      {% endfor %}
+      <ol>
         {% for sub_path in section.subsections %}
           {% set sub = get_section(path=sub_path) %}
           <li class="toc-section">
@@ -54,7 +38,7 @@
                   <li class="toc-poem">
                     <a href="{{ poem.path }}">
                       <span>{{ poem.title }}</span>
-                      {% if poem.date %}<time datetime="{{ poem.date }}">{{ poem.date }}</time>{% endif %}
+                      {% if poem.date %}<time class="meta" datetime="{{ poem.date }}">{{ poem.date }}</time>{% endif %}
                     </a>
                   </li>
                 {% endfor %}
@@ -62,24 +46,30 @@
             {% endif %}
           </li>
         {% endfor %}
-      {% else %}
-        {# Flat collection: just list poems #}
+      </ol>
+      {% for page in section.pages %}
+        {% if page.extra.entry_type == "interlude" and page.extra.position | default(value="start") == "end" %}
+          <a href="{{ page.path }}" class="toc-interlude">{{ page.content | striptags }}</a>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <ol>
         {% for page in section.pages %}
-          {% if page.extra.entry_type == "picture" %}
-            <li class="toc-picture">
-              <a href="{{ page.path }}">{{ page.title }}</a>
+          {% if page.extra.entry_type == "interlude" %}
+            <li class="toc-interlude-item">
+              <a href="{{ page.path }}" class="toc-interlude">{{ page.content | striptags }}</a>
             </li>
           {% else %}
             <li class="toc-poem">
               <a href="{{ page.path }}">
                 <span>{{ page.title }}</span>
-                {% if page.date %}<time datetime="{{ page.date }}">{{ page.date }}</time>{% endif %}
+                {% if page.date %}<time class="meta" datetime="{{ page.date }}">{{ page.date }}</time>{% endif %}
               </a>
             </li>
           {% endif %}
         {% endfor %}
-      {% endif %}
-    </ol>
+      </ol>
+    {% endif %}
   </nav>
 </article>
 {% endblock %}

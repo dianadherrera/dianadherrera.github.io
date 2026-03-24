@@ -1,15 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}{{ config.title }} | Página no encontrada{% endblock %}
-{% block body_class %}not-found{% endblock %}
+{% block title %}Página no encontrada · {{ config.title }}{% endblock %}
 
 {% block content %}
-<section class="hero">
+<section class="hero titled stack text-center">
   <h1>Página no encontrada</h1>
   <p class="tagline">La página que buscas no existe</p>
-  <nav class="home-nav">
-    <a href="/" class="home-link">Inicio</a>
-    <a href="/poems/" class="home-link">Poesía</a>
+  <nav class="cluster" aria-label="Navigation">
+    <a href="/" class="link-muted">Inicio</a>
+    <a href="/poems/" class="link-muted">Poesía</a>
   </nav>
 </section>
 {% endblock %}

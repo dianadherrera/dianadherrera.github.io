@@ -2,9 +2,9 @@
 title: Sobre el agua
 weight: 2
 sort_by: weight
-template: section-picture.html
+template: chapter.html
 extra:
-  entry_type: picture
-  image: sobre-el-agua.jpg
-  caption: suelta y fluye
+  lang: es
+  cover: cover.jpg
+  subtitle: suelta y fluye
 ---

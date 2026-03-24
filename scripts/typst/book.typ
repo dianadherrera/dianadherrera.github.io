@@ -2,132 +2,138 @@
 // Usage: typst compile book.typ --input data=book-data.json
 
 #let data = json(sys.inputs.data)
+#let muted = rgb("#6e6358")
+#let accent = rgb("#a0522d")
+#let bg = rgb("#fffcf4")
+#let border = rgb("#e8e2d6")
 
 #set page(
   paper: "a5",
-  margin: (top: 2.5cm, bottom: 2cm, left: 2cm, right: 2cm),
+  margin: (top: 1.8cm, bottom: 2cm, left: 2cm, right: 2cm),
   numbering: none,
+  fill: bg,
 )
 
 #set text(
-  font: "Baskerville",
-  size: 10.5pt,
+  font: ("Iowan Old Style", "Palatino Linotype", "Palatino", "Georgia"),
+  size: 11pt,
   lang: if data.lang == "es" { "es" } else { "en" },
 )
 
-#set par(leading: 0.7em)
+#set par(leading: 0.8em)
 
 // --- Cover page ---
-#page(margin: (top: 5cm, bottom: 2cm, left: 2cm, right: 2cm))[
+#page(margin: (top: 1.8cm, bottom: 2cm, left: 2cm, right: 2cm))[
+  #v(1fr)
   #align(center)[
-    #if data.cover != none [
-      #image(data.cover, width: 55%)
-      #v(1.2cm)
-    ]
     #text(size: 16pt, style: "italic")[#data.title]
-    #v(0.4cm)
-    #if data.subtitle != none and data.subtitle != "" [
-      #text(size: 10pt, fill: luma(120))[#data.subtitle]
-      #v(0.3cm)
-    ]
-    #text(size: 10pt, fill: luma(100))[#data.author]
   ]
+  #v(0.8cm)
+  #if data.cover != none [
+    #align(center)[
+      #image(data.cover, width: 80%)
+    ]
+  ]
+  #v(0.8cm)
+  #align(center)[
+    #text(size: 10pt, fill: muted)[#data.author]
+  ]
+  #v(1fr)
 ]
 
 // --- Entries ---
-#for entry in data.entries [
-  #if entry.type == "section" [
+#for (i, entry) in data.entries.enumerate() [
+  #if entry.type == "section" or entry.type == "interlude" [
     #pagebreak(weak: true)
     #v(1fr)
     #align(center)[
-      #text(size: 10pt, style: "italic", fill: luma(100))[
+      #text(size: 12pt, style: "italic", fill: muted)[
         #entry.body
       ]
     ]
     #v(1fr)
   ] else if entry.type == "picture" [
     #pagebreak(weak: true)
-    #v(1fr)
     #align(center)[
-      #if entry.image != none [
-        #image(entry.image, width: 75%)
-      ]
       #if entry.title != none and entry.title != "" [
-        #v(0.4cm)
-        #text(size: 8.5pt, style: "italic", fill: luma(100))[#entry.title]
+        #text(size: 14pt, style: "italic", fill: muted)[#entry.title]
       ]
       #if entry.caption != none and entry.caption != "" [
-        #v(0.2cm)
-        #text(size: 7.5pt, style: "italic", fill: luma(130))[#entry.caption]
+        #v(0.15cm)
+        #text(size: 9pt, fill: muted, tracking: 0.08em)[#entry.caption]
+      ]
+      #v(0.25cm)
+      #line(length: 0.8cm, stroke: 0.5pt + border)
+    ]
+    #v(1fr)
+    #if entry.image != none [
+      #align(center)[
+        #image(entry.image, width: 100%)
       ]
     ]
     #v(1fr)
   ] else if entry.type == "poem" [
     #pagebreak(weak: true)
-    #v(1fr)
     #align(center)[
-      #link("https://dherrera.xyz/poems/" + data.slug + "/" + entry.slug + "/")[
-        #text(size: 11pt, style: "italic", fill: luma(80))[#entry.title]
+      #link(data.base_url + "/poems/" + data.slug + "/" + entry.slug + "/")[
+        #text(size: 12pt, style: "italic", fill: accent)[#entry.title]
       ]
+      #v(0.3cm)
+      #line(length: 0.8cm, stroke: 0.5pt + border)
     ]
-    #v(0.8cm)
-    // Render stanzas — each line is an array of segments [{t, i?, b?}]
-    #for stanza in entry.stanzas [
-      #for segs in stanza [
-        #for seg in segs [
-          #if seg.at("b", default: false) [#strong[#seg.t]] else if seg.at("i", default: false) [#emph[#seg.t]] else [#seg.t]
-        ] \
+    #v(0.6cm)
+    // Poem image — full width, after title
+    #if entry.at("image", default: none) != none [
+      #align(center)[
+        #image(entry.image, width: 90%)
       ]
-      #v(0.6em)
+      #v(0.6cm)
+    ]
+    // Render stanzas — keep each stanza together
+    #for stanza in entry.stanzas [
+      #block(breakable: false)[
+        #for segs in stanza [
+          #for seg in segs [
+            #if seg.at("b", default: false) [#strong[#seg.t]] else if seg.at("i", default: false) [#emph[#seg.t]] else [#seg.t]
+          ] \
+        ]
+      ]
+      #v(0.65em)
     ]
     #v(1fr)
   ]
 ]
 
-// --- Support page ---
+// --- Closing page: illustration + thanks + copyright ---
 #pagebreak(weak: true)
 #v(1fr)
 #align(center)[
-  #text(size: 11pt, style: "italic", fill: luma(80))[
+  #if data.at("illustration", default: none) != none [
+    #image(data.illustration, width: 40%)
+    #v(0.8cm)
+  ]
+  #text(size: 12pt, style: "italic", fill: muted)[
     #if data.lang == "es" [Gracias por leer] else [Thank you for reading]
   ]
-  #v(1cm)
-  #text(size: 9pt, fill: luma(100))[
+  #v(0.5cm)
+  #text(size: 9pt, fill: muted)[
     #if data.lang == "es" [
-      Este libro es gratuito. Si estas palabras tocaron algo en ti, \
-      considera apoyar mi trabajo para que pueda seguir escribiendo.
+      Si estas palabras tocaron algo en ti, \
+      tu apoyo me permite continuar en este camino.
     ] else [
-      This book is free. If these words touched something in you, \
-      consider supporting my work so I can keep writing.
+      If these words touched something in you, \
+      your support allows me to continue on this path.
     ]
+  ]
+  #v(0.3cm)
+  #text(size: 9pt, fill: accent)[
+    #link(data.base_url)[#data.base_url.replace("https://", "")]
   ]
   #v(0.8cm)
-  #text(size: 9.5pt)[
-    #link("https://buymeacoffee.com/diana.dherrera")[buymeacoffee.com/diana.dherrera]
-  ]
-  #v(0.4cm)
-  #text(size: 8pt, fill: luma(130))[
-    #if data.lang == "es" [
-      Cada contribución, por pequeña que sea, me permite \
-      dedicar más tiempo a la poesía.
-    ] else [
-      Every contribution, no matter how small, allows me \
-      to dedicate more time to poetry.
-    ]
-  ]
-]
-#v(1fr)
-
-// --- Copyright page ---
-#pagebreak(weak: true)
-#v(1fr)
-#align(center)[
-  #text(size: 8pt, fill: luma(130))[
-    © #data.author \
-    #v(0.2cm)
-    #link("https://creativecommons.org/licenses/by-nc-nd/4.0/")[CC BY-NC-ND 4.0] \
-    #v(0.2cm)
-    #link("https://dherrera.xyz")[dherrera.xyz]
+  #line(length: 0.8cm, stroke: 0.5pt + border)
+  #v(0.5cm)
+  #text(size: 8pt, fill: muted)[
+    © #data.author · #link("https://creativecommons.org/licenses/by-nc-nd/4.0/")[CC BY-NC-ND 4.0]
   ]
 ]
 #v(1fr)
