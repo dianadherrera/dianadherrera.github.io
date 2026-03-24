@@ -10,11 +10,19 @@
   --muted: #6e6358;
   --accent: #a0522d;
   --border: #e8e2d6;
-  --hover: #f0ebe0;
+  --hover: #f5f0e8;
   --danger: #b44;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   --serif: Georgia, "Times New Roman", serif;
   --radius: 4px;
+  --zen-bg: #1a1a1a;
+  --zen-text: #d4d4d4;
+  --zen-muted: #555;
+  --zen-font: "SF Mono", "Menlo", "Consolas", monospace;
+  --zen-size: 0.95rem;
+  --zen-bg-light: #fffcf4;
+  --zen-text-light: #2a2a2a;
+  --zen-muted-light: #a09888;
 }
 
 html, body { height: 100%; overflow: hidden; }
@@ -88,6 +96,24 @@ body {
   margin-top: 0.5rem;
 }
 
+.sidebar-group { min-height: 0.5rem; }
+
+.sidebar-new-btn {
+  display: block;
+  width: calc(100% - 1.5rem);
+  margin: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.3rem;
+  background: none;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: center;
+}
+.sidebar-new-btn:hover { background: var(--hover); color: var(--text); }
+
 .sidebar a {
   display: flex;
   justify-content: space-between;
@@ -132,6 +158,8 @@ body {
   flex-shrink: 0;
 }
 
+#toolbar-links { display: flex; gap: 0.4rem; }
+
 .list-content { flex: 1; overflow-y: auto; padding: 0.25rem 0; }
 
 .section-label {
@@ -150,16 +178,16 @@ body {
   gap: 0.4rem;
   padding: 0.3rem 0.75rem;
   cursor: default;
-  border-bottom: 1px solid transparent;
+  border-left: 2px solid transparent;
 }
 .item:hover { background: var(--hover); }
 
 /* Sort mode */
-.sort-mode .item { cursor: grab; border-left: 2px solid transparent; }
+.sort-mode .item { cursor: grab; }
 .sort-mode .item:active { cursor: grabbing; }
 .sort-mode .item:hover { border-left-color: var(--accent); }
-.sort-mode .list-toolbar { background: #f5efe5; }
-.item.active { background: #f5efe5; border-left: 2px solid var(--accent); padding-left: calc(0.75rem - 2px); }
+.sort-mode .list-toolbar { background: var(--hover); }
+.item.active { background: var(--hover); border-left-color: var(--accent); }
 .item.focused { outline: 1px solid var(--accent); outline-offset: -1px; }
 .item.interlude { font-style: italic; }
 .item.is-draft { opacity: 0.5; }
@@ -226,9 +254,9 @@ body {
   gap: 0.6rem;
 }
 
-.editor .row { display: flex; gap: 0.5rem; }
+.editor .row { display: flex; gap: 0.5rem; align-items: end; }
 .editor .field { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; min-width: 0; }
-.editor .field-sm { max-width: 8rem; }
+.editor .field-sm { max-width: 6rem; flex: 0 0 auto; }
 .editor .field-md { max-width: 10rem; }
 
 .editor label {
@@ -244,6 +272,13 @@ body {
   padding: 0.3rem 0.4rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  background: var(--bg-panel);
+  color: var(--text);
+}
+
+.editor input[type=checkbox] {
+  border: none;
+  padding: 0;
 }
 
 .editor textarea {
@@ -263,7 +298,7 @@ body {
   gap: 0.4rem;
   align-items: center;
   flex-wrap: wrap;
-  padding-top: 0.25rem;
+  padding-top: 0.5rem;
   border-top: 1px solid var(--border);
 }
 
@@ -271,6 +306,30 @@ body {
   font-size: 0.65rem;
   color: var(--muted);
   margin-left: auto;
+}
+
+.cover-empty {
+  text-align: center;
+  font-style: italic;
+  padding: 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.cover-preview {
+  max-width: 100%;
+  max-height: 20rem;
+  object-fit: contain;
+  border-radius: var(--radius);
+  align-self: center;
+}
+
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  height: 1.65rem; /* match input height */
 }
 
 /* -- Buttons -- */
@@ -284,21 +343,16 @@ body {
   white-space: nowrap;
   background: var(--accent);
   color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 .btn:hover { opacity: 0.85; }
 .btn-secondary { background: var(--muted); }
 .btn-ghost { background: none; color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--hover); color: var(--text); }
 .btn-danger { background: none; color: var(--danger); border: 1px solid var(--border); }
 .btn-danger:hover { background: var(--danger); color: #fff; }
-
-select.move-select {
-  font: inherit;
-  font-size: 0.75rem;
-  padding: 0.25rem 0.3rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-panel);
-}
 
 .spacer { flex: 1; }
 
@@ -334,7 +388,7 @@ select.move-select {
 .flash {
   position: fixed;
   bottom: 1rem;
-  right: 1rem;
+  left: 1rem;
   background: var(--text);
   color: var(--bg);
   padding: 0.4rem 0.8rem;
@@ -345,6 +399,67 @@ select.move-select {
   pointer-events: none;
 }
 .flash.show { opacity: 1; }
+
+/* -- Save status -- */
+.save-status {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-left: 0.5rem;
+  font-style: italic;
+}
+
+/* -- Zen mode -- */
+.zen-mode .topbar,
+.zen-mode .sidebar,
+.zen-mode .list-panel { display: none; }
+.zen-mode {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  background: var(--zen-bg);
+}
+.zen-mode .editor-panel {
+  grid-row: 1;
+  grid-column: 1;
+  border-left: none;
+  background: transparent;
+}
+.zen-mode .editor {
+  max-width: 100ch;
+  width: 100%;
+  margin: 0 auto;
+  padding: 3rem 2rem 4rem;
+}
+.zen-mode .editor .row,
+.zen-mode .editor .actions { display: none; }
+.zen-mode .editor textarea {
+  font-family: var(--zen-font);
+  font-size: var(--zen-size);
+  line-height: 2;
+  border: none;
+  background: transparent;
+  color: var(--zen-text);
+  padding: 0;
+}
+.zen-mode .editor textarea:focus { outline: none; }
+.zen-mode .editor label { display: none; }
+.zen-mode .zen-stats {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.6rem 0;
+  font-family: var(--zen-font);
+  font-size: 0.7rem;
+  color: var(--zen-muted);
+  flex-shrink: 0;
+}
+.zen-mode .zen-stats .save-status {
+  font-style: italic;
+  color: var(--zen-muted);
+}
+
+.zen-mode.zen-light { background: var(--zen-bg-light); }
+.zen-mode.zen-light .zen-stats { background: var(--zen-bg-light); color: var(--zen-muted-light); }
+.zen-mode.zen-light .editor textarea { color: var(--zen-text-light); }
+.zen-mode.zen-light .save-status { color: var(--zen-muted-light); }
 
 .empty-state {
   text-align: center;

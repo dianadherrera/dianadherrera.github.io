@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CMS</title>
+  <title>CMS · diana dherrera</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -22,6 +22,8 @@
     <div class="list-toolbar">
       <button class="btn" id="btn-new">+ Nuevo</button>
       <button class="btn btn-ghost" id="btn-sort">Reordenar</button>
+      <span id="toolbar-links"></span>
+      <span class="spacer"></span>
     </div>
     <div class="list-content" id="list"></div>
   </section>
@@ -31,6 +33,111 @@
   </section>
 
   <div class="flash" id="flash"></div>
+
+  <!-- Templates -->
+  <template id="tpl-collection">
+    <div class="editor">
+      <div class="row">
+        <div class="field"><label>Titulo</label><input type="text" data-field="title"></div>
+      </div>
+      <div class="row">
+        <div class="field field-sm"><label>Idioma</label><input type="text" data-field="lang" placeholder="es, en"></div>
+        <div class="field field-sm"><label>Borrador</label><div class="toggle-wrap"><input type="checkbox" data-field="draft"></div></div>
+      </div>
+      <div data-field="cover-wrap">
+        <img class="cover-preview" data-field="cover-img">
+        <p class="cover-empty meta" data-field="cover-empty">Agrega cover.jpg en la carpeta de la coleccion</p>
+      </div>
+      <div class="actions">
+        <button class="btn" data-action="save">Guardar</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-editor">
+    <div class="editor">
+      <div class="row">
+        <div class="field"><label>Titulo</label><input type="text" data-field="title"></div>
+        <div class="field field-sm"><label>Tipo</label><select data-field="entry_type"><option value="poem">poem</option><option value="interlude">interlude</option><option value="essay">essay</option></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Epigrafe</label><input type="text" data-field="epigraph" placeholder="Dedicatoria o nota..."></div>
+        <div class="field"><label>Tags</label><input type="text" data-field="tags" placeholder="amor, naturaleza, ..."></div>
+      </div>
+      <div class="row">
+        <div class="field field-md"><label>Fecha</label><input type="date" data-field="date"></div>
+        <div class="field field-sm"><label>Borrador</label><div class="toggle-wrap"><input type="checkbox" data-field="draft"></div></div>
+      </div>
+      <div class="field" style="flex:1;display:flex;flex-direction:column">
+        <label>Contenido <span class="word-count" data-field="wc"></span><span class="save-status" data-field="status"></span></label>
+        <textarea data-field="body" style="flex:1"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn" data-action="save">Guardar</button>
+        <a class="btn btn-ghost" data-action="preview" target="_blank" rel="noopener">Visualizar</a>
+        <button class="btn btn-ghost" data-action="zen">Zen</button>
+        <span class="spacer"></span>
+        <button class="btn btn-danger" data-action="delete">Eliminar</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-create">
+    <div class="editor">
+      <div class="row">
+        <div class="field"><label>Titulo</label><input type="text" data-field="title" placeholder="Titulo..."></div>
+        <div class="field field-sm"><label>Tipo</label><select data-field="entry_type"><option value="poem">poem</option><option value="interlude">interlude</option><option value="essay">essay</option></select></div>
+        <div class="field field-md"><label>Fecha</label><input type="date" data-field="date"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Tags</label><input type="text" data-field="tags" placeholder="amor, naturaleza, ..."></div>
+      </div>
+      <div class="field" style="flex:1;display:flex;flex-direction:column">
+        <label>Contenido</label>
+        <textarea data-field="body" placeholder="Escribe aqui..." style="flex:1"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn" data-action="create">Crear</button>
+        <button class="btn btn-ghost" data-action="cancel">Cancelar</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-zen-stats">
+    <div class="zen-stats">
+      <span data-field="title"></span>
+      <span data-field="date"></span>
+      <span class="spacer"></span>
+      <span class="save-status" data-field="status"></span>
+      <span data-field="wc"></span>
+    </div>
+  </template>
+
+  <template id="tpl-sidebar-link">
+    <a href="#">
+      <span data-field="title"></span>
+      <span class="count" data-field="count"></span>
+    </a>
+  </template>
+
+  <template id="tpl-item">
+    <div class="item">
+      <span class="title" data-field="title"></span>
+      <span class="meta">
+        <span data-field="tags"></span>
+        <span data-field="type"></span>
+        <span class="date" data-field="date"></span>
+      </span>
+    </div>
+  </template>
+
+  <template id="tpl-search-result">
+    <div class="search-result">
+      <div class="sr-title" data-field="title"></div>
+      <div class="sr-meta" data-field="meta"></div>
+      <div class="sr-snippet" data-field="snippet"></div>
+    </div>
+  </template>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
   <script src="/app.js"></script>

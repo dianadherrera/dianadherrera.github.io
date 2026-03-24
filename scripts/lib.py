@@ -54,8 +54,6 @@ def read_collections():
         if meta.get("draft"):
             continue
         extra = meta.get("extra", {})
-        if extra.get("status", "ready") == "draft":
-            continue
         cols.append({"slug": d.name, **meta, **extra})
 
     cols.sort(key=lambda c: c.get("weight", 0))

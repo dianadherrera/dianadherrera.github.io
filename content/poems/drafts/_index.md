@@ -6,5 +6,4 @@ template: collection.html
 draft: true
 extra:
   lang: en
-  status: draft
 ---

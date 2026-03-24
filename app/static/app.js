@@ -1,108 +1,166 @@
 // -- State --
-var current = null;
-var data = null;
-var editingFile = null;
-var debounce = null;
-var autosaveTimer = null;
-var lastSavedBody = null;
-var undoSnapshot = null; // previous save state for undo
-var focusedIdx = -1;     // keyboard nav index
-var focusPanel = "list"; // "sidebar" or "list"
-var sidebarIdx = -1;
-var sortMode = false;
-var sortables = [];
+let current = null;
+let data = null;
+let editingFile = null;
+let debounce = null;
+let autosaveTimer = null;
+let lastSavedBody = null;
+let focusedIdx = -1;
+let focusPanel = "list";
+let sidebarIdx = -1;
+let currentSortBy = "weight";
+let sortMode = false;
+let sortables = [];
 
-// -- API helpers --
-function api(method, path, body) {
-  var opts = { method: method, headers: {} };
+// -- Helpers --
+const api = (method, path, body) => {
+  const opts = { method, headers: {} };
   if (body) {
     opts.headers["Content-Type"] = "application/json";
     opts.body = JSON.stringify(body);
   }
-  return fetch(path, opts).then(function(r) { return r.json(); });
-}
+  return fetch(path, opts).then(r => r.json());
+};
+
+let flashTimer = null;
+const flash = (msg) => {
+  clearTimeout(flashTimer);
+  const el = document.getElementById("flash");
+  el.textContent = msg;
+  el.classList.add("show");
+  flashTimer = setTimeout(() => el.classList.remove("show"), 2000);
+};
+
+const clone = (id) => document.getElementById(id).content.cloneNode(true).firstElementChild;
+const $f = (el, name) => el.querySelector(`[data-field="${name}"]`);
+const $a = (el, name) => el.querySelector(`[data-action="${name}"]`);
 
 // -- Init --
 function init() {
-  return api("GET", "/api/collections").then(function(cols) {
+  return api("GET", "/api/collections").then(cols => {
     if (!current && cols.length) current = cols[0].slug;
+    const cur = cols.find(c => c.slug === current);
+    currentSortBy = cur ? cur.sort_by : "weight";
     renderSidebar(cols);
+    renderToolbar();
     loadStats();
-    if (current) return loadCollection(current);
+    if (current) {
+      openCollectionEditor();
+      return loadCollection(current);
+    }
   });
 }
 
 function loadStats() {
-  api("GET", "/api/stats").then(function(s) {
-    document.getElementById("stats").innerHTML =
-      "<span><strong>" + s.published + "</strong> publicados</span>" +
-      "<span><strong>" + s.drafts + "</strong> borradores</span>" +
-      "<span><strong>" + s.words.toLocaleString() + "</strong> palabras</span>";
+  api("GET", "/api/stats").then(s => {
+    const el = document.getElementById("stats");
+    el.textContent = "";
+    for (const [val, label] of [[s.published, "publicados"], [s.drafts, "borradores"], [s.words.toLocaleString(), "palabras"]]) {
+      const span = document.createElement("span");
+      const strong = document.createElement("strong");
+      strong.textContent = val;
+      span.append(strong, ` ${label}`);
+      el.appendChild(span);
+    }
   });
 }
 
 // -- Sidebar --
 function renderSidebar(cols) {
-  var html = '<div class="sidebar-section">Colecciones</div>';
-  var published = cols.filter(function(c) { return !c.is_draft; });
-  var drafts = cols.filter(function(c) { return c.is_draft; });
+  const sidebar = document.getElementById("sidebar");
+  sidebar.textContent = "";
 
-  published.forEach(function(c) { html += sidebarLink(c); });
+  const published = cols.filter(c => !c.is_draft);
+  const drafts = cols.filter(c => c.is_draft);
+
+  sidebar.append(sidebarSection("Colecciones"), sidebarGroup(published));
   if (drafts.length) {
-    html += '<div class="sidebar-section">Borradores</div>';
-    drafts.forEach(function(c) { html += sidebarLink(c); });
+    sidebar.append(sidebarSection("Borradores"), sidebarGroup(drafts));
   }
 
-  var sidebar = document.getElementById("sidebar");
-  sidebar.innerHTML = html;
-  sidebar.querySelectorAll("a").forEach(function(a) {
-    a.onclick = function(e) {
+  // New collection button
+  const btn = document.createElement("button");
+  btn.className = "sidebar-new-btn";
+  btn.textContent = "+ Coleccion";
+  btn.onclick = createCollection;
+  sidebar.appendChild(btn);
+
+  // Drag reordering
+  for (const group of sidebar.querySelectorAll(".sidebar-group")) {
+    Sortable.create(group, {
+      animation: 150,
+      ghostClass: "sortable-ghost",
+      onEnd() {
+        const order = {};
+        sidebar.querySelectorAll(".sidebar-group a").forEach((a, i) => {
+          order[a.dataset.slug] = i + 1;
+        });
+        api("POST", "/api/save-collection-order", { order }).then(() => flash("Orden guardado"));
+      }
+    });
+  }
+
+  // Click + drop-to-move
+  for (const a of sidebar.querySelectorAll("a")) {
+    a.onclick = (e) => {
       e.preventDefault();
       current = a.dataset.slug;
       closeEditor();
       init();
     };
-  });
-
-  // Drag-to-sidebar: make each sidebar link a drop target
-  sidebar.querySelectorAll("a").forEach(function(a) {
-    a.addEventListener("dragover", function(e) {
-      e.preventDefault();
-      a.classList.add("drop-target");
-    });
-    a.addEventListener("dragleave", function() {
-      a.classList.remove("drop-target");
-    });
-    a.addEventListener("drop", function(e) {
+    a.addEventListener("dragover", e => { e.preventDefault(); a.classList.add("drop-target"); });
+    a.addEventListener("dragleave", () => a.classList.remove("drop-target"));
+    a.addEventListener("drop", e => {
       e.preventDefault();
       a.classList.remove("drop-target");
-      var file = e.dataTransfer.getData("text/plain");
-      var targetSlug = a.dataset.slug;
-      if (!file || targetSlug === current) return;
-      api("POST", "/api/move", { from_slug: current, file: file, to_slug: targetSlug, to_section: null }).then(function() {
+      const file = e.dataTransfer.getData("text/plain");
+      if (!file || a.dataset.slug === current) return;
+      api("POST", "/api/move", { from_slug: current, file, to_slug: a.dataset.slug, to_section: null }).then(() => {
         if (editingFile === file) closeEditor();
         loadCollection(current);
         loadStats();
         init();
-        flash("Movido a " + a.querySelector("span").textContent);
+        flash(`Movido a ${$f(a, "title").textContent}`);
       });
     });
-  });
+  }
 }
 
-function sidebarLink(c) {
-  var cls = [];
-  if (c.slug === current) cls.push("active");
-  if (c.is_draft) cls.push("is-draft");
-  return '<a href="#" data-slug="' + c.slug + '" class="' + cls.join(" ") + '">'
-    + '<span>' + esc(c.title) + '</span>'
-    + '<span class="count">' + c.count + '</span>'
-    + '</a>';
+function sidebarSection(label) {
+  const div = document.createElement("div");
+  div.className = "sidebar-section";
+  div.textContent = label;
+  return div;
+}
+
+function sidebarGroup(cols) {
+  const group = document.createElement("div");
+  group.className = "sidebar-group";
+  for (const c of cols) {
+    const a = clone("tpl-sidebar-link");
+    a.dataset.slug = c.slug;
+    if (c.slug === current) a.classList.add("active");
+    if (c.is_draft) a.classList.add("is-draft");
+    $f(a, "title").textContent = c.title;
+    $f(a, "count").textContent = c.count;
+    group.appendChild(a);
+  }
+  return group;
+}
+
+function createCollection() {
+  const title = prompt("Nombre de la coleccion:");
+  if (!title) return;
+  api("POST", "/api/create-collection", { title }).then(r => {
+    current = r.slug;
+    init();
+    flash("Coleccion creada");
+  });
 }
 
 // -- List --
 function loadCollection(slug) {
-  return api("GET", "/api/collection/" + slug).then(function(d) {
+  return api("GET", `/api/collection/${slug}`).then(d => {
     data = d;
     focusedIdx = -1;
     renderList();
@@ -110,119 +168,170 @@ function loadCollection(slug) {
 }
 
 function renderList() {
-  var el = document.getElementById("list");
-  var html = "";
+  const el = document.getElementById("list");
+  el.textContent = "";
 
   if (data.pages.length) {
-    html += '<div class="section-items" id="root-pages">';
-    data.pages.forEach(function(p) { html += itemHtml(p); });
-    html += "</div>";
+    el.appendChild(itemGroup("root-pages", data.pages));
   }
 
-  data.sections.forEach(function(sec) {
-    html += '<div class="section-label">' + esc(sec.title) + '</div>';
-    html += '<div class="section-items" id="sec-' + sec.slug + '">';
-    sec.pages.forEach(function(p) { html += itemHtml(p); });
-    html += "</div>";
-  });
+  for (const sec of data.sections) {
+    const label = document.createElement("div");
+    label.className = "section-label";
+    label.textContent = sec.title;
+    el.append(label, itemGroup(`sec-${sec.slug}`, sec.pages));
+  }
 
   if (!data.pages.length && !data.sections.length) {
-    html = '<div class="empty-state">Sin entradas</div>';
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "Sin entradas";
+    el.appendChild(empty);
   }
 
-  el.innerHTML = html;
-
-  el.querySelectorAll("[data-edit]").forEach(function(span) {
-    span.onclick = function() { openEditor(span.dataset.edit); };
-  });
-
-  // Make items draggable for sidebar drop (always, independent of sort mode)
-  el.querySelectorAll(".item").forEach(function(item) {
-    item.setAttribute("draggable", "true");
-    item.addEventListener("dragstart", function(e) {
-      if (sortMode) return; // let SortableJS handle it in sort mode
-      e.dataTransfer.setData("text/plain", item.dataset.file);
-      e.dataTransfer.effectAllowed = "move";
-    });
-  });
-
-  // Init sortables if in sort mode
   if (sortMode) enableSortables();
 
-  // Restore focus highlight
   if (focusedIdx >= 0) {
-    var items = getAllItems();
+    const items = getAllItems();
     if (items[focusedIdx]) items[focusedIdx].classList.add("focused");
   }
 }
 
-function itemHtml(p) {
-  var cls = ["item"];
-  if (p.entry_type === "interlude") cls.push("interlude");
-  if (p.draft) cls.push("is-draft");
-  if (p.file === editingFile) cls.push("active");
-
-  var tags = "";
-  if (p.tags && p.tags.length) {
-    tags = p.tags.map(function(t) { return '<span class="tag">' + esc(t) + "</span>"; }).join("");
-  }
-
-  return '<div class="' + cls.join(" ") + '" data-file="' + p.file + '">'
-    + '<span class="title" data-edit="' + p.file + '">' + esc(p.title) + "</span>"
-    + '<span class="meta">' + tags + "<span>" + (p.entry_type || "poem") + "</span>" + (p.date ? '<span class="date">' + p.date + '</span>' : '') + "</span>"
-    + "</div>";
+function itemGroup(id, pages) {
+  const wrap = document.createElement("div");
+  wrap.className = "section-items";
+  wrap.id = id;
+  for (const p of pages) wrap.appendChild(buildItem(p));
+  return wrap;
 }
 
-function getAllItems() {
-  return Array.from(document.querySelectorAll("#list .item"));
+function buildItem(p) {
+  const el = clone("tpl-item");
+  el.dataset.file = p.file;
+  if (p.entry_type === "interlude") el.classList.add("interlude");
+  if (p.draft) el.classList.add("is-draft");
+  if (p.file === editingFile) el.classList.add("active");
+
+  const title = $f(el, "title");
+  title.textContent = p.title;
+  title.onclick = () => openEditor(p.file);
+
+  const tagsEl = $f(el, "tags");
+  for (const t of (p.tags || [])) {
+    const span = document.createElement("span");
+    span.className = "tag";
+    span.textContent = t;
+    tagsEl.appendChild(span);
+  }
+
+  $f(el, "type").textContent = p.entry_type || "poem";
+
+  const dateEl = $f(el, "date");
+  if (p.date) {
+    dateEl.textContent = p.date;
+  } else {
+    dateEl.remove();
+  }
+
+  el.draggable = true;
+  el.addEventListener("dragstart", e => {
+    if (sortMode) return;
+    e.dataTransfer.setData("text/plain", p.file);
+    e.dataTransfer.effectAllowed = "move";
+  });
+
+  return el;
+}
+
+const getAllItems = () => [...document.querySelectorAll("#list .item")];
+
+// -- Toolbar --
+function renderToolbar() {
+  const sortBtn = document.getElementById("btn-sort");
+  sortBtn.style.display = currentSortBy === "weight" ? "" : "none";
+
+  const links = document.getElementById("toolbar-links");
+  if (!links || !current) return;
+  links.textContent = "";
+  for (const [label, href] of [["PDF", `/pdf/${current}.pdf`], ["EPUB", `/epub/${current}.epub`]]) {
+    const a = document.createElement("a");
+    Object.assign(a, { className: "btn btn-ghost", href, target: "_blank", rel: "noopener", textContent: label });
+    links.appendChild(a);
+  }
+}
+
+// -- Collection editor --
+function openCollectionEditor() {
+  if (!current || editingFile) return;
+  api("GET", `/api/collection/${current}/meta`).then(m => {
+    if (editingFile) return;
+
+    const el = clone("tpl-collection");
+    $f(el, "title").value = m.title;
+    $f(el, "lang").value = m.lang;
+    $f(el, "draft").checked = m.draft;
+
+    const img = $f(el, "cover-img");
+    const empty = $f(el, "cover-empty");
+    if (m.has_cover) {
+      img.src = `/covers/${current}`;
+      img.alt = m.title;
+      empty.remove();
+    } else {
+      img.remove();
+    }
+
+    $a(el, "save").onclick = () => {
+      api("PUT", `/api/collection/${current}/meta`, {
+        title: $f(el, "title").value,
+        lang: $f(el, "lang").value,
+        draft: $f(el, "draft").checked,
+      }).then(() => { flash("Guardado"); init(); });
+    };
+
+    const panel = document.getElementById("editor-panel");
+    panel.textContent = "";
+    panel.appendChild(el);
+  });
 }
 
 // -- Sort mode --
-document.getElementById("btn-sort").onclick = toggleSortMode;
-
-function toggleSortMode() {
-  if (sortMode) {
-    exitSortMode();
-  } else {
-    enterSortMode();
-  }
-}
+document.getElementById("btn-sort").onclick = () => {
+  sortMode ? exitSortMode() : enterSortMode();
+};
 
 function enterSortMode() {
   sortMode = true;
   document.body.classList.add("sort-mode");
-  document.getElementById("btn-sort").textContent = "Listo";
-  document.getElementById("btn-sort").classList.remove("btn-ghost");
-  document.getElementById("btn-sort").classList.add("btn");
+  const btn = document.getElementById("btn-sort");
+  btn.textContent = "Listo";
+  btn.classList.remove("btn-ghost");
   enableSortables();
 }
 
 function exitSortMode() {
-  // Save order on exit
-  var order = {};
-  document.querySelectorAll(".section-items").forEach(function(list) {
-    list.querySelectorAll(".item").forEach(function(item, i) {
+  const order = {};
+  for (const list of document.querySelectorAll(".section-items")) {
+    list.querySelectorAll(".item").forEach((item, i) => {
       order[item.dataset.file] = i + 1;
     });
-  });
-  api("POST", "/api/save-order", { slug: current, order: order }).then(function() {
-    flash("Orden guardado");
-  });
+  }
+  api("POST", "/api/save-order", { slug: current, order }).then(() => flash("Orden guardado"));
 
   sortMode = false;
   document.body.classList.remove("sort-mode");
-  document.getElementById("btn-sort").textContent = "Reordenar";
-  document.getElementById("btn-sort").classList.remove("btn");
-  document.getElementById("btn-sort").classList.add("btn-ghost");
+  const btn = document.getElementById("btn-sort");
+  btn.textContent = "Reordenar";
+  btn.classList.add("btn-ghost");
   destroySortables();
 }
 
 function cancelSortMode() {
   sortMode = false;
   document.body.classList.remove("sort-mode");
-  document.getElementById("btn-sort").textContent = "Reordenar";
-  document.getElementById("btn-sort").classList.remove("btn");
-  document.getElementById("btn-sort").classList.add("btn-ghost");
+  const btn = document.getElementById("btn-sort");
+  btn.textContent = "Reordenar";
+  btn.classList.add("btn-ghost");
   destroySortables();
   loadCollection(current);
   flash("Orden descartado");
@@ -230,104 +339,75 @@ function cancelSortMode() {
 
 function enableSortables() {
   destroySortables();
-  document.querySelectorAll(".section-items").forEach(function(el) {
+  for (const el of document.querySelectorAll(".section-items")) {
     sortables.push(Sortable.create(el, {
       animation: 150,
       ghostClass: "sortable-ghost",
       chosenClass: "sortable-chosen",
       group: "poems",
     }));
-  });
+  }
 }
 
 function destroySortables() {
-  sortables.forEach(function(s) { s.destroy(); });
+  sortables.forEach(s => s.destroy());
   sortables = [];
 }
 
 // -- Editor --
+let statusTimer = null;
+function showStatus(msg) {
+  clearTimeout(statusTimer);
+  for (const el of document.querySelectorAll('[data-field="status"]')) el.textContent = msg;
+  if (msg === "Guardado") statusTimer = setTimeout(() => {
+    for (const el of document.querySelectorAll('[data-field="status"]')) el.textContent = "";
+  }, 2000);
+}
+
 function openEditor(file) {
   editingFile = file;
-  undoSnapshot = null;
 
-  // Highlight in list
-  document.querySelectorAll(".item").forEach(function(el) {
-    el.classList.toggle("active", el.dataset.file === file);
-  });
+  for (const item of document.querySelectorAll(".item")) {
+    item.classList.toggle("active", item.dataset.file === file);
+  }
 
-  Promise.all([
-    api("GET", "/api/entry/" + current + "/" + file),
-    api("GET", "/api/collections"),
-    api("GET", "/api/collection/" + current),
-  ]).then(function(results) {
-    var entry = results[0];
-    var cols = results[1];
-    var col = results[2];
+  api("GET", `/api/entry/${current}/${file}`).then(entry => {
+    const el = clone("tpl-editor");
 
-    var moveOpts = '<option value="">Mover a...</option>';
-    cols.forEach(function(c) {
-      if (c.slug !== current) moveOpts += '<option value="' + c.slug + '">' + esc(c.title) + "</option>";
-    });
+    $f(el, "title").value = entry.title;
+    $f(el, "entry_type").value = entry.entry_type;
+    $f(el, "epigraph").value = entry.epigraph || "";
+    $f(el, "tags").value = (entry.tags || []).join(", ");
+    $f(el, "date").value = entry.date || "";
+    $f(el, "draft").checked = entry.draft;
+    $f(el, "body").value = entry.body;
 
-    var secOpts = "";
-    if (col.sections.length) {
-      secOpts = '<select class="move-select" id="ed-move-sec"><option value="">Raiz</option>';
-      col.sections.forEach(function(s) {
-        secOpts += '<option value="' + s.slug + '">' + esc(s.title) + "</option>";
-      });
-      secOpts += "</select>";
+    const preview = $a(el, "preview");
+    if (entry.draft) {
+      preview.remove();
+    } else {
+      preview.href = previewUrl(file);
     }
 
-    var tagsVal = (entry.tags || []).join(", ");
+    $a(el, "save").onclick = saveEntry;
+    $a(el, "zen").onclick = toggleZen;
+    $a(el, "delete").onclick = deleteEntry;
 
-    document.getElementById("editor-panel").innerHTML =
-      '<div class="editor">'
-      + '<div class="row">'
-      + '  <div class="field"><label>Titulo</label><input type="text" id="ed-title" value="' + esc(entry.title) + '"></div>'
-      + '  <div class="field field-sm"><label>Tipo</label><input type="text" id="ed-type" value="' + esc(entry.entry_type) + '" list="types"></div>'
-      + '  <div class="field field-md"><label>Fecha</label><input type="date" id="ed-date" value="' + (entry.date || "") + '"></div>'
-      + '</div>'
-      + '<datalist id="types"><option value="poem"><option value="interlude"><option value="essay"></datalist>'
-      + '<div class="row">'
-      + '  <div class="field"><label>Epigrafe</label><input type="text" id="ed-epigraph" value="' + esc(entry.epigraph || "") + '" placeholder="Dedicatoria o nota..."></div>'
-      + '  <div class="field"><label>Tags</label><input type="text" id="ed-tags" value="' + esc(tagsVal) + '" placeholder="amor, naturaleza, ..."></div>'
-      + '</div>'
-      + '<div class="field" style="flex:1;display:flex;flex-direction:column">'
-      + '  <label>Contenido <span class="word-count" id="ed-wc"></span></label>'
-      + '  <textarea id="ed-body" style="flex:1">' + esc(entry.body) + '</textarea>'
-      + '</div>'
-      + '<div class="actions">'
-      + '  <button class="btn" id="btn-save">Guardar</button>'
-      + '  <button class="btn btn-ghost" id="btn-undo" style="display:none">Deshacer</button>'
-      + (entry.draft ? '' : '  <a class="btn btn-ghost" id="btn-preview" href="' + previewUrl(file) + '" target="_blank" rel="noopener">Vista previa</a>')
-      + '  <button class="btn btn-ghost" id="btn-dup">Duplicar</button>'
-      + '  <button class="btn btn-ghost" id="btn-close">Cerrar</button>'
-      + '  <span class="spacer"></span>'
-      + '  <select class="move-select" id="ed-move-col">' + moveOpts + '</select>'
-      + secOpts
-      + '  <button class="btn btn-secondary" id="btn-move">Mover</button>'
-      + '  <button class="btn btn-danger" id="btn-delete">Eliminar</button>'
-      + '</div>'
-      + '</div>';
+    for (const inp of el.querySelectorAll("input, textarea, select")) {
+      const evt = inp.tagName === "SELECT" ? "onchange" : "oninput";
+      inp[evt] = () => {
+        if (inp.dataset.field === "body") updateWc();
+        scheduleAutosave();
+      };
+    }
+    $f(el, "draft").onchange = scheduleAutosave;
+
+    const panel = document.getElementById("editor-panel");
+    panel.textContent = "";
+    panel.appendChild(el);
 
     updateWc();
     lastSavedBody = JSON.stringify(gatherEditorData());
-
-    document.getElementById("btn-save").onclick = saveEntry;
-    document.getElementById("btn-close").onclick = closeEditor;
-    document.getElementById("btn-move").onclick = moveEntry;
-    document.getElementById("btn-delete").onclick = deleteEntry;
-    document.getElementById("btn-dup").onclick = duplicateEntry;
-    document.getElementById("btn-undo").onclick = undoSave;
-
-    // Autosave on any input change
-    ["ed-title", "ed-type", "ed-date", "ed-epigraph", "ed-tags", "ed-body"].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) el.oninput = function() {
-        if (id === "ed-body") updateWc();
-        scheduleAutosave();
-      };
-    });
   });
 }
 
@@ -335,128 +415,73 @@ function closeEditor() {
   clearTimeout(autosaveTimer);
   editingFile = null;
   lastSavedBody = null;
-  undoSnapshot = null;
-  document.getElementById("editor-panel").innerHTML = '<div class="editor-empty">Selecciona un poema</div>';
-  document.querySelectorAll(".item.active").forEach(function(el) { el.classList.remove("active"); });
+  if (document.body.classList.contains("zen-mode")) toggleZen();
+  for (const el of document.querySelectorAll(".item.active")) el.classList.remove("active");
+  openCollectionEditor();
 }
 
-function previewUrl(file) {
-  var slug = file.replace(/\.md$/, "");
-  return "http://localhost:4000/poems/" + current + "/" + slug + "/";
-}
+const previewUrl = (file) => `http://localhost:4000/poems/${current}/${file.replace(/\.md$/, "")}/`;
 
 function updateWc() {
-  var el = document.getElementById("ed-body");
-  var wc = document.getElementById("ed-wc");
-  if (!el || !wc) return;
-  var t = el.value.trim();
-  var words = t ? t.split(/ +/).length : 0;
-  var lines = t ? t.split("\n").filter(function(l) { return l.trim(); }).length : 0;
-  wc.textContent = lines + " lineas · " + words + " palabras";
+  const body = document.querySelector('[data-field="body"]');
+  const wc = document.querySelector('[data-field="wc"]');
+  if (!body || !wc) return;
+  const t = body.value.trim();
+  const words = t ? t.split(/ +/).length : 0;
+  const lines = t ? t.split("\n").filter(l => l.trim()).length : 0;
+  wc.textContent = `${lines} lineas · ${words} palabras`;
 }
 
 function scheduleAutosave() {
   clearTimeout(autosaveTimer);
   if (!editingFile) return;
-  autosaveTimer = setTimeout(function() {
+  autosaveTimer = setTimeout(() => {
     if (!editingFile) return;
-    var body = gatherEditorData();
+    const body = gatherEditorData();
     if (!body) return;
-    var snapshot = JSON.stringify(body);
+    const snapshot = JSON.stringify(body);
     if (snapshot === lastSavedBody) return;
-    undoSnapshot = lastSavedBody;
     lastSavedBody = snapshot;
-    api("PUT", "/api/entry/" + current + "/" + editingFile, body).then(function() {
-      showUndo();
-      flash("Autoguardado");
+    showStatus("Guardando...");
+    api("PUT", `/api/entry/${current}/${editingFile}`, body).then(() => {
+      showStatus("Guardado");
     });
   }, 2000);
 }
 
 function gatherEditorData() {
-  var title = document.getElementById("ed-title");
+  const panel = document.getElementById("editor-panel");
+  const title = $f(panel, "title");
   if (!title) return null;
   return {
     title: title.value,
-    entry_type: document.getElementById("ed-type").value,
-    epigraph: document.getElementById("ed-epigraph").value,
-    tags: parseTags(document.getElementById("ed-tags").value),
-    date: document.getElementById("ed-date").value,
-    body: document.getElementById("ed-body").value,
+    entry_type: $f(panel, "entry_type").value,
+    epigraph: $f(panel, "epigraph").value,
+    tags: parseTags($f(panel, "tags").value),
+    date: $f(panel, "date").value,
+    draft: $f(panel, "draft").checked,
+    body: $f(panel, "body").value,
   };
 }
 
-function parseTags(s) {
-  if (!s) return [];
-  return s.split(",").map(function(t) { return t.trim(); }).filter(function(t) { return t; });
-}
+const parseTags = (s) => s ? s.split(",").map(t => t.trim()).filter(Boolean) : [];
 
 function saveEntry() {
   clearTimeout(autosaveTimer);
-  var body = gatherEditorData();
+  const body = gatherEditorData();
   if (!body) return;
-  undoSnapshot = lastSavedBody;
   lastSavedBody = JSON.stringify(body);
-  api("PUT", "/api/entry/" + current + "/" + editingFile, body).then(function() {
+  showStatus("Guardando...");
+  api("PUT", `/api/entry/${current}/${editingFile}`, body).then(() => {
     loadCollection(current);
-    showUndo();
-    flash("Guardado");
-  });
-}
-
-function showUndo() {
-  var btn = document.getElementById("btn-undo");
-  if (!btn || !undoSnapshot) return;
-  btn.style.display = "";
-  // Hide after 8s
-  setTimeout(function() {
-    if (btn) btn.style.display = "none";
-  }, 8000);
-}
-
-function undoSave() {
-  if (!undoSnapshot || !editingFile) return;
-  var prev = JSON.parse(undoSnapshot);
-  undoSnapshot = null;
-  api("PUT", "/api/entry/" + current + "/" + editingFile, prev).then(function() {
-    // Reload editor with reverted content
-    openEditor(editingFile);
-    loadCollection(current);
-    flash("Deshecho");
-  });
-}
-
-function duplicateEntry() {
-  if (!editingFile) return;
-  var body = gatherEditorData();
-  if (!body) return;
-  body.title = body.title + " (copia)";
-  api("POST", "/api/create/" + current, body).then(function(r) {
-    loadCollection(current);
-    loadStats();
-    flash("Duplicado");
-    if (r.file) openEditor(r.file);
-  });
-}
-
-function moveEntry() {
-  var col = document.getElementById("ed-move-col").value;
-  if (!col) return flash("Selecciona una coleccion");
-  var secEl = document.getElementById("ed-move-sec");
-  var sec = secEl ? secEl.value : "";
-  api("POST", "/api/move", { from_slug: current, file: editingFile, to_slug: col, to_section: sec || null }).then(function() {
-    closeEditor();
-    loadCollection(current);
-    loadStats();
-    init();
-    flash("Movido");
+    showStatus("Guardado");
   });
 }
 
 function deleteEntry() {
-  var action = current === "drafts" ? "eliminar permanentemente" : "mover a borradores";
-  if (!confirm("¿" + action + "?")) return;
-  api("POST", "/api/delete", { slug: current, file: editingFile }).then(function() {
+  const action = current === "drafts" ? "eliminar permanentemente" : "mover a borradores";
+  if (!confirm(`¿${action}?`)) return;
+  api("POST", "/api/delete", { slug: current, file: editingFile }).then(() => {
     closeEditor();
     loadCollection(current);
     loadStats();
@@ -465,45 +490,31 @@ function deleteEntry() {
 }
 
 // -- Create --
-document.getElementById("btn-new").onclick = function() {
+document.getElementById("btn-new").onclick = () => {
   editingFile = null;
-  document.getElementById("editor-panel").innerHTML =
-    '<div class="editor">'
-    + '<div class="row">'
-    + '  <div class="field"><label>Titulo</label><input type="text" id="ed-title" placeholder="Titulo..."></div>'
-    + '  <div class="field field-sm"><label>Tipo</label><input type="text" id="ed-type" value="poem" list="types"></div>'
-    + '  <div class="field field-md"><label>Fecha</label><input type="date" id="ed-date"></div>'
-    + '</div>'
-    + '<datalist id="types"><option value="poem"><option value="interlude"><option value="essay"></datalist>'
-    + '<div class="row">'
-    + '  <div class="field"><label>Tags</label><input type="text" id="ed-tags" placeholder="amor, naturaleza, ..."></div>'
-    + '</div>'
-    + '<div class="field" style="flex:1;display:flex;flex-direction:column">'
-    + '  <label>Contenido</label>'
-    + '  <textarea id="ed-body" placeholder="Escribe aqui..." style="flex:1"></textarea>'
-    + '</div>'
-    + '<div class="actions">'
-    + '  <button class="btn" id="btn-create">Crear</button>'
-    + '  <button class="btn btn-ghost" id="btn-cancel-create">Cancelar</button>'
-    + '</div>'
-    + '</div>';
+  const el = clone("tpl-create");
 
-  document.getElementById("btn-create").onclick = createEntry;
-  document.getElementById("btn-cancel-create").onclick = closeEditor;
-  document.getElementById("ed-title").focus();
+  $a(el, "create").onclick = createEntry;
+  $a(el, "cancel").onclick = closeEditor;
+
+  const panel = document.getElementById("editor-panel");
+  panel.textContent = "";
+  panel.appendChild(el);
+  $f(el, "title").focus();
 };
 
 function createEntry() {
-  var title = document.getElementById("ed-title").value;
+  const panel = document.getElementById("editor-panel");
+  const title = $f(panel, "title").value;
   if (!title) return flash("Titulo requerido");
-  var body = {
-    title: title,
-    entry_type: document.getElementById("ed-type").value,
-    tags: parseTags(document.getElementById("ed-tags").value),
-    date: document.getElementById("ed-date").value,
-    body: document.getElementById("ed-body").value || "",
+  const body = {
+    title,
+    entry_type: $f(panel, "entry_type").value,
+    tags: parseTags($f(panel, "tags").value),
+    date: $f(panel, "date").value,
+    body: $f(panel, "body").value || "",
   };
-  api("POST", "/api/create/" + current, body).then(function(r) {
+  api("POST", `/api/create/${current}`, body).then(r => {
     loadCollection(current);
     loadStats();
     flash("Creado");
@@ -512,92 +523,91 @@ function createEntry() {
 }
 
 // -- Search --
-var searchInput = document.getElementById("search");
-var searchResults = document.getElementById("search-results");
+const searchInput = document.getElementById("search");
+const searchResults = document.getElementById("search-results");
 
-searchInput.oninput = function() {
+searchInput.oninput = () => {
   clearTimeout(debounce);
-  var q = searchInput.value.trim();
-  if (!q) { searchResults.classList.remove("open"); searchResults.innerHTML = ""; return; }
-  debounce = setTimeout(function() {
-    api("GET", "/api/search?q=" + encodeURIComponent(q)).then(function(results) {
+  const q = searchInput.value.trim();
+  if (!q) { searchResults.classList.remove("open"); searchResults.textContent = ""; return; }
+  debounce = setTimeout(() => {
+    api("GET", `/api/search?q=${encodeURIComponent(q)}`).then(results => {
+      searchResults.textContent = "";
       if (!results.length) {
-        searchResults.innerHTML = '<div class="empty-state" style="padding:1rem">Sin resultados</div>';
+        const empty = document.createElement("div");
+        Object.assign(empty, { className: "empty-state" });
+        empty.style.padding = "1rem";
+        empty.textContent = "Sin resultados";
+        searchResults.appendChild(empty);
       } else {
-        searchResults.innerHTML = results.map(function(r) {
-          return '<div class="search-result" data-go-col="' + r.collection + '" data-go-file="' + r.file + '">'
-            + '<div class="sr-title">' + esc(r.title) + (r.draft ? " <em>(borrador)</em>" : "") + '</div>'
-            + '<div class="sr-meta">' + esc(r.collection_title) + " · " + r.entry_type + '</div>'
-            + '<div class="sr-snippet">' + esc(r.snippet) + '</div>'
-            + '</div>';
-        }).join("");
-
-        searchResults.querySelectorAll("[data-go-col]").forEach(function(el) {
-          el.onclick = function() {
-            var targetCol = el.dataset.goCol;
-            var targetFile = el.dataset.goFile;
+        for (const r of results) {
+          const el = clone("tpl-search-result");
+          const titleEl = $f(el, "title");
+          titleEl.textContent = r.title;
+          if (r.draft) {
+            const em = document.createElement("em");
+            em.textContent = " (borrador)";
+            titleEl.appendChild(em);
+          }
+          $f(el, "meta").textContent = `${r.collection_title} · ${r.entry_type}`;
+          $f(el, "snippet").textContent = r.snippet;
+          el.onclick = () => {
             searchResults.classList.remove("open");
             searchInput.value = "";
-            editingFile = targetFile; // set before render so list highlights it
-            current = targetCol;
-            init().then(function() {
-              openEditor(targetFile);
-            });
+            editingFile = r.file;
+            current = r.collection;
+            init().then(() => openEditor(r.file));
           };
-        });
+          searchResults.appendChild(el);
+        }
       }
       searchResults.classList.add("open");
     });
   }, 250);
 };
 
-document.addEventListener("click", function(e) {
-  if (!e.target.closest(".search-box")) {
-    searchResults.classList.remove("open");
-  }
+document.addEventListener("click", e => {
+  if (!e.target.closest(".search-box")) searchResults.classList.remove("open");
 });
 
 // -- Keyboard navigation --
-document.addEventListener("keydown", function(e) {
-  // Don't capture when typing in inputs
-  var tag = e.target.tagName;
-  var inEditor = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+document.addEventListener("keydown", e => {
+  const tag = e.target.tagName;
+  const inEditor = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 
-  // Cmd/Ctrl+S — save from anywhere
   if ((e.metaKey || e.ctrlKey) && e.key === "s") {
     e.preventDefault();
     if (editingFile) saveEntry();
     return;
   }
-
-  // Cmd/Ctrl+N — new entry
   if ((e.metaKey || e.ctrlKey) && e.key === "n") {
     e.preventDefault();
     document.getElementById("btn-new").click();
     return;
   }
-
-  // Cmd/Ctrl+Z — undo (only when not in a text field)
-  if ((e.metaKey || e.ctrlKey) && e.key === "z" && !inEditor && undoSnapshot) {
+  if ((e.metaKey || e.ctrlKey) && e.key === "l") {
+    if (document.body.classList.contains("zen-mode")) { e.preventDefault(); toggleZenTheme(); }
+    return;
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === "e" && editingFile) {
     e.preventDefault();
-    undoSave();
+    toggleZen();
     return;
   }
-
-  // Escape — cancel sort mode, close editor, or blur input
   if (e.key === "Escape") {
-    if (sortMode) {
-      cancelSortMode();
-    } else if (inEditor) {
-      e.target.blur();
-    } else if (editingFile) {
-      closeEditor();
-    }
+    if (document.body.classList.contains("zen-mode")) { toggleZen(); return; }
+    if (sortMode) cancelSortMode();
+    else if (inEditor) e.target.blur();
+    else if (editingFile) closeEditor();
     return;
   }
 
-  // Panel switching: h = sidebar, l = list
   if (!inEditor) {
+    if (e.key === "/") {
+      e.preventDefault();
+      document.getElementById("search").focus();
+      return;
+    }
     if (e.key === "h" || e.key === "ArrowLeft") {
       e.preventDefault();
       focusPanel = "sidebar";
@@ -616,11 +626,10 @@ document.addEventListener("keydown", function(e) {
     }
   }
 
-  // Arrow keys — navigate within active panel
   if (inEditor) return;
 
   if (focusPanel === "sidebar") {
-    var links = Array.from(document.querySelectorAll(".sidebar a"));
+    const links = [...document.querySelectorAll(".sidebar a")];
     if (!links.length) return;
     if (e.key === "ArrowDown" || e.key === "j") {
       e.preventDefault();
@@ -637,7 +646,7 @@ document.addEventListener("keydown", function(e) {
       focusedIdx = 0;
     }
   } else {
-    var items = getAllItems();
+    const items = getAllItems();
     if (!items.length) return;
     if (e.key === "ArrowDown" || e.key === "j") {
       e.preventDefault();
@@ -655,43 +664,63 @@ document.addEventListener("keydown", function(e) {
 });
 
 function highlightFocused(items) {
-  items.forEach(function(el) { el.classList.remove("focused"); });
+  items.forEach(el => el.classList.remove("focused"));
   if (focusedIdx >= 0 && focusedIdx < items.length) {
     items[focusedIdx].classList.add("focused");
     items[focusedIdx].scrollIntoView({ block: "nearest" });
   }
 }
 
-function clearListFocus() {
-  getAllItems().forEach(function(el) { el.classList.remove("focused"); });
-}
+const clearListFocus = () => getAllItems().forEach(el => el.classList.remove("focused"));
 
 function highlightSidebar() {
-  var links = Array.from(document.querySelectorAll(".sidebar a"));
-  links.forEach(function(el) { el.classList.remove("focused"); });
+  const links = [...document.querySelectorAll(".sidebar a")];
+  links.forEach(el => el.classList.remove("focused"));
   if (sidebarIdx >= 0 && sidebarIdx < links.length) {
     links[sidebarIdx].classList.add("focused");
     links[sidebarIdx].scrollIntoView({ block: "nearest" });
   }
 }
 
-function clearSidebarFocus() {
-  document.querySelectorAll(".sidebar a").forEach(function(el) { el.classList.remove("focused"); });
+const clearSidebarFocus = () => document.querySelectorAll(".sidebar a").forEach(el => el.classList.remove("focused"));
+
+// -- Zen mode --
+function toggleZen() {
+  const entering = !document.body.classList.contains("zen-mode");
+  document.body.classList.toggle("zen-mode");
+  if (!entering) { document.body.classList.remove("zen-light"); }
+
+  const old = document.querySelector(".zen-stats");
+  if (old) old.remove();
+
+  if (!entering) return;
+
+  document.body.classList.add("zen-light");
+
+  const panel = document.getElementById("editor-panel");
+  const stats = clone("tpl-zen-stats");
+  $f(stats, "title").textContent = $f(panel, "title")?.value || "";
+  $f(stats, "date").textContent = $f(panel, "date")?.value || "";
+  document.querySelector(".editor").appendChild(stats);
+  updateZenStats();
+
+  const ta = document.querySelector('[data-field="body"]');
+  if (ta) { ta.focus(); ta.addEventListener("input", updateZenStats); }
 }
 
-// -- Util --
-function esc(s) {
-  if (!s) return "";
-  var d = document.createElement("div");
-  d.textContent = s;
-  return d.innerHTML;
+function toggleZenTheme() {
+  document.body.classList.toggle("zen-light");
 }
 
-function flash(msg) {
-  var el = document.getElementById("flash");
-  el.textContent = msg;
-  el.classList.add("show");
-  setTimeout(function() { el.classList.remove("show"); }, 2000);
+function updateZenStats() {
+  const ta = document.querySelector('[data-field="body"]');
+  const el = document.querySelector('.zen-stats [data-field="wc"]');
+  if (!ta || !el) return;
+  const t = ta.value.trim();
+  const lines = t ? t.split("\n").filter(l => l.trim()).length : 0;
+  const words = t ? t.split(/\s+/).length : 0;
+  const chars = t.length;
+  el.textContent = `${lines}L  ${words}P  ${chars}C`;
 }
 
 // -- Start --

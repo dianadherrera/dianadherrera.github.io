@@ -66,7 +66,6 @@ def build_pdf(col):
         "cover": cover,
         "illustration": illustration,
         "base_url": CONFIG.get("base_url", ""),
-        "donate": CONFIG.get("extra", {}).get("donate", ""),
         "entries": pdf_entries,
     }, indent=2, ensure_ascii=False))
 

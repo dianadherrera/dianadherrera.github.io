@@ -12,12 +12,10 @@
 {% block content %}
 <article class="collection-detail stack text-center">
   {{ col::header(section=section) }}
-  {% set status = section.extra.status | default(value="draft") %}
-  {% if status != "draft" %}
+  {% if not section.draft %}
   <nav class="cluster" style="--flow-space: var(--space-m)" aria-label="Downloads">
     <a href="/pdf/{{ section.components | last }}.pdf" class="link-muted meta">PDF</a>
     <a href="/epub/{{ section.components | last }}.epub" class="link-muted meta">EPUB</a>
-    {% if config.extra.donate %}<a href="{{ config.extra.donate }}" class="link-muted meta">Donaciones</a>{% endif %}
   </nav>
   {% endif %}
   <nav class="toc" aria-label="Table of contents">
