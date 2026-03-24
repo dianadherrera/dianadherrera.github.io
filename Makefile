@@ -1,6 +1,8 @@
-.PHONY: build site pdf epub dev cms clean
+.PHONY: build site books pdf epub dev cms clean
 
-build: site pdf epub
+build: site books
+
+books: pdf epub
 
 site:
 	zola build
@@ -12,7 +14,7 @@ epub:
 	cd scripts && uv run epub.py
 
 dev:
-	zola serve --port 4000 --interface 0.0.0.0 --base-url /
+	uv run app/cms.py & zola serve --port 4000 --interface 0.0.0.0 --base-url /
 
 cms:
 	uv run app/cms.py

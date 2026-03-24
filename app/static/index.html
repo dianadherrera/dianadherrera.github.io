@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CMS</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>diana dherrera</h1>
+    <div class="stats" id="stats"></div>
+    <div class="search-box">
+      <input type="search" id="search" placeholder="Buscar poemas, borradores, tags..." autocomplete="off">
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <section class="list-panel">
+    <div class="list-toolbar">
+      <button class="btn" id="btn-new">+ Nuevo</button>
+      <button class="btn btn-ghost" id="btn-sort">Reordenar</button>
+    </div>
+    <div class="list-content" id="list"></div>
+  </section>
+
+  <section class="editor-panel" id="editor-panel">
+    <div class="editor-empty">Selecciona un poema</div>
+  </section>
+
+  <div class="flash" id="flash"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
