@@ -30,6 +30,18 @@ def build_pdf(col):
 
         if typ == "poem":
             entry["stanzas"] = content_to_stanzas(e.get("content", ""))
+            if e.get("epigraph"):
+                epi = e["epigraph"]
+                segs = []
+                last = 0
+                for m in re.finditer(r"\[([^\]]+)\]\(([^)]+)\)", epi):
+                    if m.start() > last:
+                        segs.append({"t": epi[last:m.start()]})
+                    segs.append({"t": m.group(1), "url": m.group(2)})
+                    last = m.end()
+                if last < len(epi):
+                    segs.append({"t": epi[last:]})
+                entry["epigraph"] = segs
             # Extract inline image if present
             m = re.search(r"!\[[^\]]*\]\(([^)]+)\)", e.get("content", ""))
             if m:

@@ -78,20 +78,38 @@
       #link(data.base_url + "/poems/" + data.slug + "/" + entry.slug + "/")[
         #text(size: 12pt, style: "italic", fill: accent)[#entry.title]
       ]
-      #v(0.3cm)
+      #v(0.10cm)
       #line(length: 0.8cm, stroke: 0.5pt + border)
     ]
-    #v(0.6cm)
-    // Poem image — full width, after title
+    // Epigraph
+    #if entry.at("epigraph", default: none) != none [
+      #v(-0.15cm)
+      #align(center)[
+        #text(size: 9pt, style: "italic", fill: muted)[
+          #for seg in entry.epigraph [
+            #if seg.at("url", default: none) != none [
+              #link(seg.url)[#seg.t]
+            ] else [
+              #seg.t
+            ]
+          ]
+        ]
+      ]
+      #v(0.5cm)
+    ] else [
+      #v(0.6cm)
+    ]
+    // Poem image
     #if entry.at("image", default: none) != none [
       #align(center)[
         #image(entry.image, width: 90%)
       ]
       #v(0.6cm)
     ]
-    // Render stanzas — keep each stanza together
+    // Render stanzas
+    #let single = entry.stanzas.len() == 1
     #for stanza in entry.stanzas [
-      #block(breakable: false)[
+      #block(breakable: single)[
         #for segs in stanza [
           #for seg in segs [
             #if seg.at("b", default: false) [#strong[#seg.t]] else if seg.at("i", default: false) [#emph[#seg.t]] else [#seg.t]

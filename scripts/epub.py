@@ -57,7 +57,7 @@ h1::after {
   font-style: italic;
   font-size: 0.85em;
   color: #6e6358;
-  margin: 0 1em 2em;
+  margin: 0.3em 1em 1.5em;
 }
 img {
   max-width: 100%;
@@ -255,7 +255,12 @@ def build_epub(col):
                 content = content.replace(f"]({img_md})", f"](images/{img_md})")
 
             title = entry.get("title", "")
-            epi_html = f'<p class="epigraph">{esc(entry.get("epigraph", ""))}</p>' if entry.get("epigraph") else ""
+            epi = entry.get("epigraph", "")
+            if epi:
+                epi = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', epi)
+                epi = re.sub(r"\*([^*]+)\*", r"<em>\1</em>", epi)
+                epi = re.sub(r"(?<!\w)_([^_]+)_(?!\w)", r"<em>\1</em>", epi)
+            epi_html = f'<p class="epigraph">{epi}</p>' if epi else ""
             add_page(pid, xhtml(title, f"<h1>{esc(title)}</h1>\n{epi_html}\n{md_to_xhtml(content)}", lang=lang))
 
     # Closing page — no flexbox
