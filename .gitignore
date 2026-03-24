@@ -3,3 +3,4 @@
 public/
 static/processed_images/
 tmp/
+*.pyc

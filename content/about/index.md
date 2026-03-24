@@ -6,12 +6,18 @@ extra:
   subtitle: detrás de las palabras
 ---
 
-Mi pasión es escribir, mi motivación es la verdad, mi guía es la curiosidad, mi habilidad es la bondad, mi destino es la paz.
+Cazadora de misterio. \
+Cifro mi interior con curiosidad.
 
-Dejé todo lo que conocía para escribir, así que tu contribución o cualquier palabra de aliento son invaluables para mí.
+Escribo sin saber quién soy,  \
+Existo fuera del tiempo.
 
-Aspiro a convertirme en un ser humano pleno, capaz de apreciar las experiencias extraordinarias y ordinarias que tejen mi vida.
+Practico la maestría de mí misma,  \
+el asombro mi política de vida.
 
-Mi intención es compartir mi camino a través de mis poemas, y cultivar la bondad y la buena compañía, para quienes puedan necesitarlo en el camino.
+No me apresuro, pero me dedico.  \
+Escucho; hablo distinto.
 
-¡Gracias por tu apoyo, que estés bien!
+Entregada a la poesía  \
+me muestro, \
+llego.
