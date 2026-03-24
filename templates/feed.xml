@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>{{ config.title }}</title>
-  <subtitle>{{ config.extra.tagline | default(value="") }}</subtitle>
+  <subtitle>{{ config.description | default(value="") }}</subtitle>
   <link href="{{ config.base_url }}/feed.xml" rel="self"/>
   <link href="{{ config.base_url }}/"/>
   <id>{{ config.base_url }}/</id>

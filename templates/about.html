@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% import "macros/poem.html" as poem %}
+
 {% block title %}{{ page.title }} — {{ config.title }}{% endblock %}
 {% block og_title %}{{ page.title }}{% endblock %}
 {% block measure %}34rem{% endblock %}
@@ -11,11 +13,9 @@
 {% block content %}
 <article class="about titled stack text-center">
   <h1>{{ page.title }}</h1>
-  {% if page.extra.subtitle %}<p class="tagline">{{ page.extra.subtitle }}</p>{% endif %}
+  {% if page.description %}<p class="tagline">{{ page.description }}</p>{% endif %}
   {% set img = resize_image(path="about/cover.jpg", width=600, op="fit_width", format="webp", quality=80) %}
   <img class="about-photo" src="{{ img.url }}" alt="{{ config.title }}" width="{{ img.width }}" height="{{ img.height }}">
-  <div class="about-text">
-    {{ page.content | safe }}
-  </div>
+  {{ poem::render(path=page.relative_path, base_path="about/") }}
 </article>
 {% endblock %}

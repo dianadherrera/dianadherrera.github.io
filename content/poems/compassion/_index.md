@@ -1,11 +1,10 @@
 ---
 title: Compassion
 sort_by: weight
-weight: 6
+weight: 3
 template: collection.html
 extra:
   lang: en
-  cover: cover.jpg
   sections:
   - weight: 0
     title: Exclusion

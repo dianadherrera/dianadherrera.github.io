@@ -1,5 +1,6 @@
 base_url = "https://dherrera.xyz"
 title = "diana dherrera"
+description = "Sitio personal"
 default_language = "es"
 
 generate_feeds = true
@@ -16,6 +17,3 @@ lazy_async_image = true
 
 [slugify]
 paths = "safe"
-
-[extra]
-tagline = "escritora"

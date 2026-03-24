@@ -3,10 +3,8 @@ title: Drops
 sort_by: weight
 weight: 5
 template: collection.html
-draft: true
 extra:
   lang: en
-  cover: cover.jpg
   sections:
   - weight: 0
     title: Sioux Indian saying

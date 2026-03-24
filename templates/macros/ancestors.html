@@ -57,12 +57,9 @@
   {%- else -%}
     {%- set col = parent -%}
   {%- endif -%}
-  {%- if col.extra.cover -%}
-    {%- set base = col.path | trim_start_matches(pat="/") | trim_end_matches(pat="/") -%}
-    {%- set img = base ~ "/" ~ col.extra.cover -%}
-    {%- set og = resize_image(path=img, width=1200, op="fit_width") -%}
-    <meta property="og:image" content="{{ og.url }}">
-  {%- endif -%}
+  {%- set base = col.path | trim_start_matches(pat="/") | trim_end_matches(pat="/") -%}
+  {%- set og = resize_image(path=base ~ "/cover.jpg", width=1200, op="fit_width") -%}
+  <meta property="og:image" content="{{ og.url }}">
 {%- endmacro %}
 
 {% macro col_path(page) %}

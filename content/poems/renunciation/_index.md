@@ -1,10 +1,9 @@
 ---
 title: Renunciation
 sort_by: weight
-weight: 7
+weight: 6
 template: collection.html
 extra:
   lang: en
-  cover: cover.jpg
 
 ---

@@ -11,7 +11,7 @@
     {{ poem::render(path=page.relative_path, base_path=col.path) }}
 #}
 
-{% macro render(path, base_path) %}
+{% macro render(path, base_path="") %}
   {%- set raw = load_data(path=path, format="plain") -%}
   {%- set body = raw | regex_replace(pattern="^---[\s\S]*?---\n*", rep="") | trim -%}
   {%- set stanzas = body | split(pat="

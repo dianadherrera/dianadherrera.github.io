@@ -1,10 +1,9 @@
 ---
 title: Impermanence
-draft: false
-date: 2026-01-10
+draft: true
+date: '2026-01-10'
 extra:
   entry_type: poem
-  lang: en
 ---
 
 ¿Ya te dije que te amo?  —dijiste de repente— .

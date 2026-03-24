@@ -16,26 +16,24 @@
 {% set parent = get_section(path=section.ancestors | last) %}
 <section class="hero titled stack text-center">
   <h1>{{ section.title }}</h1>
-  {% if section.extra.subtitle %}<p class="tagline">{{ section.extra.subtitle }}</p>{% endif %}
+  {% if section.description %}<p class="tagline">{{ section.description }}</p>{% endif %}
 </section>
 <article class="poem-content chapter-content stack text-center">
-  {% if section.extra.cover %}
-    {% set base = section.path | trim_start_matches(pat="/") | trim_end_matches(pat="/") %}
-    {% set img_path = base ~ "/" ~ section.extra.cover %}
-    {% set sm = resize_image(path=img_path, width=600, op="fit_width", format="webp", quality=80) %}
-    {% set lg = resize_image(path=img_path, width=1200, op="fit_width", format="webp", quality=80) %}
-    <figure class="poem-image">
-      <img
-        src="{{ sm.url }}"
-        srcset="{{ sm.url }} 600w, {{ lg.url }} 1200w"
-        sizes="(max-width: 600px) 90vw, 600px"
-        alt="{{ section.title }}"
-        width="{{ sm.width }}"
-        height="{{ sm.height }}"
-      >
-      {% if section.extra.credit %}<figcaption class="meta credit">{{ section.extra.credit }}</figcaption>{% endif %}
-    </figure>
-  {% endif %}
+  {% set base = section.path | trim_start_matches(pat="/") | trim_end_matches(pat="/") %}
+  {% set img_path = base ~ "/cover.jpg" %}
+  {% set sm = resize_image(path=img_path, width=600, op="fit_width", format="webp", quality=80) %}
+  {% set lg = resize_image(path=img_path, width=1200, op="fit_width", format="webp", quality=80) %}
+  <figure class="poem-image">
+    <img
+      src="{{ sm.url }}"
+      srcset="{{ sm.url }} 600w, {{ lg.url }} 1200w"
+      sizes="(max-width: 600px) 90vw, 600px"
+      alt="{{ section.title }}"
+      width="{{ sm.width }}"
+      height="{{ sm.height }}"
+    >
+    {% if section.extra.credit %}<figcaption class="meta credit">{{ section.extra.credit }}</figcaption>{% endif %}
+  </figure>
 </article>
 
 <nav class="poem-nav">

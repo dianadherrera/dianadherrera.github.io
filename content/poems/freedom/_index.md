@@ -5,6 +5,5 @@ weight: 10
 template: collection.html
 extra:
   lang: en
-  cover: cover.jpg
-
+draft: true
 ---

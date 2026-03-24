@@ -41,6 +41,14 @@ def _read_poems(dir):
     return poems
 
 
+def find_cover(dir):
+    for ext in ("jpg", "jpeg", "png", "webp"):
+        p = dir / f"cover.{ext}"
+        if p.exists():
+            return p.name
+    return None
+
+
 def read_collections():
     poems = ROOT / "content" / "poems"
     cols = []
@@ -54,7 +62,8 @@ def read_collections():
         if meta.get("draft"):
             continue
         extra = meta.get("extra", {})
-        cols.append({"slug": d.name, **meta, **extra})
+        cover = find_cover(d)
+        cols.append({"slug": d.name, "cover": cover, **meta, **extra})
 
     cols.sort(key=lambda c: c.get("weight", 0))
     return cols

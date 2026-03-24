@@ -1,10 +1,9 @@
 ---
 title: Dualidad
 sort_by: weight
-weight: 3
+weight: 4
 template: collection.html
 extra:
   lang: es
-  cover: cover.jpg
 
 ---

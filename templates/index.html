@@ -6,7 +6,7 @@
 {% block content %}
 <section class="hero titled stack text-center">
   <h1>{{ config.title }}</h1>
-  <p class="tagline">{{ config.extra.tagline }}</p>
+  {% if section.description %}<p class="tagline">{{ section.description }}</p>{% endif %}
   <nav class="home-nav cluster" style="--flow-space: var(--space-l)" aria-label="Site navigation">
     <a href="/poems/" class="link-muted">Poesía</a>
     <a href="/about/" class="link-muted">Acerca</a>
