@@ -7,6 +7,4 @@ extra:
   lang: es
 ---
 
-Mi medicina es la palabra,
-
-mi tratamiento el entendimiento.
+Mi medicina es la palabra, mi tratamiento, el entendimiento.

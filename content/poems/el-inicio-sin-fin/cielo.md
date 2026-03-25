@@ -5,4 +5,4 @@ extra:
   entry_type: poem
 ---
 
-![Cielo](cielo.jpg)
+![Cielo](cielo.png)
