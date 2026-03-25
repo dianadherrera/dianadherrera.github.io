@@ -92,6 +92,7 @@ def read_entries(slug):
         header = {
             **extra,
             "title": meta.get("title", ""),
+            "description": meta.get("description", ""),
             "slug": sub.name,
             "weight": meta.get("weight", 0),
             "cover": cover,

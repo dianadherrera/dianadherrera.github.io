@@ -58,12 +58,12 @@
       #if entry.title != none and entry.title != "" [
         #text(size: 14pt, style: "italic", fill: muted)[#entry.title]
       ]
+      #v(0.25cm)
+      #line(length: 0.8cm, stroke: 0.5pt + border)
       #if entry.caption != none and entry.caption != "" [
         #v(0.15cm)
         #text(size: 9pt, fill: muted, tracking: 0.08em)[#entry.caption]
       ]
-      #v(0.25cm)
-      #line(length: 0.8cm, stroke: 0.5pt + border)
     ]
     #v(1fr)
     #if entry.image != none [

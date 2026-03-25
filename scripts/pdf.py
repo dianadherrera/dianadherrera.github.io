@@ -53,7 +53,7 @@ def build_pdf(col):
         elif typ == "section":
             entry["body"] = e.get("body", e.get("title", ""))
         elif typ == "picture":
-            entry["caption"] = e.get("subtitle", e.get("caption", ""))
+            entry["caption"] = e.get("subtitle", e.get("description", e.get("caption", "")))
             img = e.get("cover", e.get("image"))
             p = img_dir / e["slug"] / img if img else None
             entry["image"] = f"/{p.relative_to(ROOT)}" if p and p.exists() else None

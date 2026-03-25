@@ -233,7 +233,7 @@ def build_epub(col):
                 img_path = f"{entry.get('slug', '')}/{img}"
                 add_image(img_path)
             title = entry.get("title", "")
-            caption = entry.get("subtitle", entry.get("caption", ""))
+            caption = entry.get("subtitle", entry.get("description", entry.get("caption", "")))
             title_html = f'<p style="font-size:1.3em; font-style:italic; color:#6e6358; margin:0;">{esc(title)}</p>' if title else ""
             cap_html = f'<p style="font-size:0.85em; font-style:italic; color:#6e6358; margin:0.2em 0 0; letter-spacing:0.08em;">{esc(caption)}</p>' if caption else ""
             sep_html = '<div style="width:0.8em; height:1px; background:#e8e2d6; margin:0.5em auto;"></div>'
@@ -241,8 +241,8 @@ def build_epub(col):
             add_page(pid, xhtml(title, f"""
 <div style="text-align:center; padding-top:15%;">
   {title_html}
-  {cap_html}
   {sep_html}
+  {cap_html}
   <div style="margin-top:2em;">
     {img_html}
   </div>
