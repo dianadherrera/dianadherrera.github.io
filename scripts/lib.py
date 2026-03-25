@@ -88,11 +88,13 @@ def read_entries(slug):
         meta, _ = parse_frontmatter(si.read_text())
         extra = meta.get("extra", {})
 
+        cover = find_cover(sub)
         header = {
             **extra,
             "title": meta.get("title", ""),
             "slug": sub.name,
             "weight": meta.get("weight", 0),
+            "cover": cover,
         }
         poems = _read_poems(sub)
         poems.sort(key=lambda e: e.get("weight", 0))
