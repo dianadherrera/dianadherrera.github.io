@@ -1,6 +1,6 @@
 ---
 title: Poesía
-description: Mi medicina es la palabra, mi tratamiento, el entendimiento.
+description: Mi medicina es la palabra, mi tratamiento, la escucha.
 sort_by: weight
 template: poems.html
 ---
