@@ -14,7 +14,7 @@
   {%- else -%}
     {%- set col = parent -%}
   {%- endif -%}
-  <li><a href="/poems/">Poesía</a></li>
+  <li><a href="/poems/">Colecciones</a></li>
   <li><a href="{{ col.path }}">{{ col.title }}</a></li>
   {%- if sub %}<li><a href="{{ sub.path }}">{{ sub.title }}</a></li>{% endif %}
   <li><a href="{{ page.path }}" aria-current="page">{{ page.title }}</a></li>

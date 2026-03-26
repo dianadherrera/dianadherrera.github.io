@@ -8,7 +8,7 @@
 {% block og_image %}{{ col::og_image(section=section) }}{% endblock %}
 {% block breadcrumb %}
   {% set parent = get_section(path=section.ancestors | last) %}
-  <li><a href="/poems/">Poesía</a></li>
+  <li><a href="/poems/">Colecciones</a></li>
   <li><a href="{{ parent.path }}">{{ parent.title }}</a></li>
   <li><a href="{{ section.path }}" aria-current="page">{{ section.title }}</a></li>
 {% endblock %}

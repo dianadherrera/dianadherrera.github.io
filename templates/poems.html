@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Poesía · {{ config.title }}{% endblock %}
+{% block title %}Colecciones · {{ config.title }}{% endblock %}
 {% block og_type %}website{% endblock %}
 {% block measure %}65rem{% endblock %}
-{% block breadcrumb %}<li><a href="/poems/">Poesía</a></li>{% endblock %}
+{% block breadcrumb %}<li><a href="/poems/">Colecciones</a></li>{% endblock %}
 {% block content %}
 <section class="hero titled stack text-center">
-  <h1>Poesía</h1>
+  <h1>Colecciones</h1>
   {% if section.description %}<p class="tagline">{{ section.description }}</p>{% endif %}
 </section>
 <ul class="collections-grid grid" role="list">

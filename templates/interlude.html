@@ -6,7 +6,7 @@
 {% block title %}{{ page.title }} · {{ config.title }}{% endblock %}
 {% block measure %}34rem{% endblock %}
 {% block breadcrumb %}
-  <li><a href="/poems/">Poesía</a></li>
+  <li><a href="/poems/">Colecciones</a></li>
   {% set col = get_section(path=page.ancestors | last) %}
   <li><a href="{{ col.path }}">{{ col.title }}</a></li>
 {% endblock %}
