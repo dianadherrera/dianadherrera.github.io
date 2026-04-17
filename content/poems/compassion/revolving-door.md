@@ -1,18 +1,17 @@
 ---
 title: Revolving door
-weight: 11
 date: '2025-03-11'
+weight: 11
 extra:
   entry_type: poem
 ---
-
 I want to say yes
-and make the first move,
-even if I am doubtful
+and make the first move.
+Even if I am doubtful
 or considered a fool.
 
-Forgive my clumsy intentions
-feelings are not my strong suit
+Forgive my clumsy intentions,
+feelings are not my strong suit,
 but I yearn for connection,
 so pride is no longer the tool.
 
@@ -29,7 +28,7 @@ and cease to withdraw.
 Open the door
 to the myriad of outcomes,
 face the uncertainty
-of unexpected encounters.
+of encounters.
 
 Sparks of intimacy,
 embers of courage,
@@ -39,7 +38,7 @@ with truthful proposals.
 Love,
 even when it's tough,
 when loved ones are gone,
-or is just plain awkward.
+or it is just awkward.
 
 Be love,
 through acts and intentions,

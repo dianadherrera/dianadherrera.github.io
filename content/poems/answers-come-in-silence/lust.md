@@ -1,11 +1,11 @@
 ---
 title: Lust
-weight: 8
 date: '2024-10-19'
+weight: 8
 extra:
   entry_type: poem
+  epigraph: ode to a jacket on Costco
 ---
-
 I think of you
 as if it were yesterday,
 when I left you in that aisle.
