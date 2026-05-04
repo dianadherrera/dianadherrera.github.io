@@ -1,12 +1,11 @@
 ---
 title: For when we meet
-weight: 3
 date: '2025-01-21'
+weight: 3
 extra:
   entry_type: poem
   epigraph: Title taken from a poem of Rosemerry Trommer
 ---
-
 I want a new ritual
 for when we don't agree
 I know it happens often,
@@ -28,7 +27,7 @@ Could you mind repeating
 about your unheard truth?
 
 We can speak slowly,
-take our own time.
+take our time.
 Clear out the schedule,
 get a rain check if it's hard.
 
